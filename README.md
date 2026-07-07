@@ -16,4 +16,4 @@ The dev server runs on `http://localhost:3001`.
 PATH=/home/likycoder/node-v22.14.0-linux-x64/bin:$PATH npm run build
 ```
 # satesoft_website
-# satesoft_website
+
