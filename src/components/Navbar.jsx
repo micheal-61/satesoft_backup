@@ -56,26 +56,26 @@ export default function Appheader() {
 
             {/* Desktop Menu */}
             <nav className="hidden lg:flex items-center space-x-8">
-              <Link to="/" className={`font-medium text-sm transition-colors hover:text-primary-500 ${location.pathname === '/' ? 'text-primary-500' : 'text-text'}`}>Home</Link>
+              <Link to="/" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/' ? 'text-primary-500' : 'text-text'}`}>Home</Link>
               
               <div className="relative group">
-                <Link to="/company" className="font-medium text-sm transition-colors hover:text-primary-500 flex items-center gap-1 text-text">
+                <Link to="/about" className={`font-semibold text-sm transition-colors hover:text-primary-500 flex items-center gap-1 ${location.pathname === '/about' || location.pathname === '/board' || location.pathname === '/pricing' || location.pathname === '/testimonials' ? 'text-primary-500' : 'text-text'}`}>
                   Company <i className="bi bi-chevron-down text-[10px]"></i>
                 </Link>
-                <div className="absolute top-full left-0 mt-2 w-48 bg-surface rounded-lg shadow-card border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                <div className="absolute top-full left-0 mt-2 w-56 bg-surface rounded-xl shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 overflow-hidden">
                   <div className="py-2">
-                    <Link to="/about" className="block px-4 py-2 text-sm text-text hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-500">About Us</Link>
-                    <Link to="/company" className="block px-4 py-2 text-sm text-text hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-500">Our Team</Link>
-                    <Link to="/services" className="block px-4 py-2 text-sm text-text hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-500">Testimonials</Link>
-                    <Link to="/pricing" className="block px-4 py-2 text-sm text-text hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-500">Pricing</Link>
+                    <Link to="/about" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">About Us</Link>
+                    <Link to="/board" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Our Team</Link>
+                    <Link to="/testimonials" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Testimonials</Link>
+                    <Link to="/pricing" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Pricing</Link>
                   </div>
                 </div>
               </div>
 
-              <Link to="/products" className={`font-medium text-sm transition-colors hover:text-primary-500 ${location.pathname === '/products' ? 'text-primary-500' : 'text-text'}`}>Portfolio</Link>
-              <Link to="/services" className={`font-medium text-sm transition-colors hover:text-primary-500 ${location.pathname === '/services' ? 'text-primary-500' : 'text-text'}`}>Services</Link>
-              <Link to="/blog" className={`font-medium text-sm transition-colors hover:text-primary-500 ${location.pathname.startsWith('/blog') ? 'text-primary-500' : 'text-text'}`}>Blog</Link>
-              <Link to="/contact" className={`font-medium text-sm transition-colors hover:text-primary-500 ${location.pathname === '/contact' ? 'text-primary-500' : 'text-text'}`}>Contact</Link>
+              <Link to="/products" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/products' ? 'text-primary-500' : 'text-text'}`}>Portfolio</Link>
+              <Link to="/services" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/services' ? 'text-primary-500' : 'text-text'}`}>Services</Link>
+              <Link to="/blog" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname.startsWith('/blog') ? 'text-primary-500' : 'text-text'}`}>Blog</Link>
+              <Link to="/contact" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/contact' ? 'text-primary-500' : 'text-text'}`}>Contact</Link>
             </nav>
 
             {/* CTA & Mobile Toggle */}

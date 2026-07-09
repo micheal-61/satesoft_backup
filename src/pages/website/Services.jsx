@@ -40,7 +40,11 @@ export default function OurServices() {
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col items-center justify-center mb-16 text-center">
-          <h5 className="uppercase tracking-widest text-primary-500 font-semibold text-sm mb-3">SATESOFT SERVICES</h5>
+          <div className="mb-6">
+            <Link to="/services" className="inline-block px-4 py-2 bg-white shadow-[0_4px_15px_-3px_rgba(61,158,65,0.4)] rounded-lg uppercase tracking-[0.2em] text-primary-600 font-bold text-xs border-y border-primary-100 border-x-4 border-x-primary-500 hover:scale-105 transition-all duration-300">
+              SATESOFT SERVICES
+            </Link>
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight max-w-3xl">
             How Professional IT Services<br /> Can Drive <span className="text-primary-500">Success.</span>
           </h1>                            
@@ -48,7 +52,7 @@ export default function OurServices() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {servicesData.map((service) => (
-            <div key={service.id} className="group">
+            <Link key={service.id} to={service.link} className="group block">
               <div className="card h-full flex flex-col items-start border border-border bg-white hover:border-primary-200 transition-all duration-300">
                 <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mb-6 group-hover:bg-primary-500 transition-colors duration-300">
                   <i className={`${service.icon} text-3xl text-primary-500 group-hover:text-white transition-colors duration-300`}></i>
@@ -58,12 +62,12 @@ export default function OurServices() {
                 <p className="text-text/70 mb-8 flex-grow leading-relaxed">{service.description}</p>
                 
                 <div className="mt-auto">
-                  <Link to={service.link} className="inline-flex items-center gap-2 text-sm font-bold text-primary-500 hover:text-primary-700 transition-colors">
+                  <span className="inline-flex items-center gap-2 text-sm font-bold text-primary-500 group-hover:text-primary-700 transition-colors">
                     <i className="fas fa-plus text-xs"></i> READ MORE
-                  </Link>
+                  </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

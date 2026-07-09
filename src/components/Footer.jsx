@@ -58,7 +58,7 @@ function Footer() {
               <h3 className="text-xl font-bold text-white mb-6 relative pb-2 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-12 after:bg-primary-500">Useful Links</h3>
               <ul className="space-y-3">
                 <li><Link to="/about" className="hover:text-primary-500 transition-colors block">About Company</Link></li>
-                <li><Link to="/team" className="hover:text-primary-500 transition-colors block">Meet Our Team</Link></li>
+                <li><Link to="/board" className="hover:text-primary-500 transition-colors block">Meet Our Team</Link></li>
                 <li><Link to="/blog" className="hover:text-primary-500 transition-colors block">Latest Blog</Link></li>
                 <li><Link to="/contact" className="hover:text-primary-500 transition-colors block">Contact Us</Link></li>
                 <li><Link to="/testimonials" className="hover:text-primary-500 transition-colors block">Testimonials</Link></li>
