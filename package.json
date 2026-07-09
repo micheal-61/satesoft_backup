@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "/home/likycoder/.nvm/versions/node/v20.20.2/bin/node node_modules/.bin/vite",
-    "build": "/home/likycoder/.nvm/versions/node/v20.20.2/bin/node node_modules/.bin/vite build",
-    "preview": "/home/likycoder/.nvm/versions/node/v20.20.2/bin/node node_modules/.bin/vite preview",
-    "server": "/home/likycoder/.nvm/versions/node/v20.20.2/bin/node server.js",
-    "dev:all": "/home/likycoder/.nvm/versions/node/v20.20.2/bin/node node_modules/.bin/concurrently \"npm run dev\" \"npm run server\""
-  },
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "server": "node server.js",
+  "dev:all": "concurrently \"npm run dev\" \"npm run server\""
+},
   "dependencies": {
     "aos": "^2.3.4",
     "axios": "^1.6.0",
