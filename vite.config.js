@@ -11,5 +11,18 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3001'
     }
+  },
+  build: {
+    target: 'esnext',
+    minify: 'esbuild',
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          router: ['react-router-dom']
+        }
+      }
+    }
   }
 })

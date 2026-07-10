@@ -57,7 +57,11 @@ const Board = () => {
               <svg className="mr-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
               BACK TO HOME
             </a>
-            <h4 className="text-primary-600 font-bold text-sm tracking-widest uppercase mb-3">Leadership</h4>
+            <div className="mb-6">
+              <Link to="/board" className="inline-block px-4 py-2 bg-white shadow-[0_4px_15px_-3px_rgba(61,158,65,0.4)] rounded-lg uppercase tracking-[0.2em] text-primary-600 font-bold text-xs border-y border-primary-100 border-x-4 border-x-primary-500 hover:scale-105 transition-all duration-300">
+                Leadership
+              </Link>
+            </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text mb-6 tracking-tight">
               Board of Advisors
             </h1>
