@@ -49,8 +49,10 @@ export default function Appheader() {
           <div className="flex justify-between items-center">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <Link to="/" className="flex items-center">
-                <h1 className="font-bold text-2xl tracking-tight text-primary-500 m-0">SATESOFT</h1>
+               <Link to="/" className="flex items-center">
+                <h1 className="font-bold text-2xl tracking-tight m-0">
+                  <span className="text-text">SATE</span><span className="text-primary-500">SOFT</span>
+                </h1>
               </Link>
             </div>
 
@@ -59,7 +61,7 @@ export default function Appheader() {
               <Link to="/" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/' ? 'text-primary-500' : 'text-text'}`}>Home</Link>
               
               <div className="relative group">
-                <Link to="/about" className={`font-semibold text-sm transition-colors hover:text-primary-500 flex items-center gap-1 ${location.pathname === '/about' || location.pathname === '/board' || location.pathname === '/pricing' || location.pathname === '/testimonials' ? 'text-primary-500' : 'text-text'}`}>
+                 <Link to="/about" className={`font-semibold text-sm transition-colors hover:text-primary-500 flex items-center gap-1 ${location.pathname === '/about' || location.pathname === '/board' || location.pathname === '/pricing' || location.pathname === '/testimonials' ? 'text-primary-500' : 'text-text'}`}>
                   Company <i className="bi bi-chevron-down text-[10px]"></i>
                 </Link>
                 <div className="absolute top-full left-0 mt-2 w-56 bg-surface rounded-xl shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 overflow-hidden">

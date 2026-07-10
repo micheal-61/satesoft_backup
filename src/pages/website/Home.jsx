@@ -1,8 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Hero from "./Hero";
 
+const africanImages = [
+  "/assets/images/african_tech_woman_3_1783002839334.png",
+  "/assets/images/african_tech_woman_1783002349511.png",
+  "/assets/images/african_developer_laptop_1783002306037.png",
+  "/assets/images/african_tech_team_hero_1783002251745.png",
+];
+
 const Home = () => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % africanImages.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div>
       {/* HERO SECTION */}
@@ -57,16 +73,23 @@ const Home = () => {
 
             {/* RIGHT IMAGE */}
             <div className="w-full lg:w-1/2">
-              <div className="relative group overflow-hidden rounded-3xl">
-                {/* Glow Effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-300 opacity-20 blur-xl group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative group overflow-hidden rounded-3xl">
+                  {/* Glow Effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-300 opacity-20 blur-xl group-hover:opacity-40 transition duration-500"></div>
 
-                <img
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
-                  alt="Satesoft Digital Solutions"
-                  className="relative w-full rounded-3xl shadow-2xl object-cover aspect-video transform group-hover:scale-105 transition duration-500"
-                />
-              </div>
+                  <div className="relative w-full rounded-3xl shadow-2xl object-cover aspect-video">
+                    {africanImages.map((src, index) => (
+                      <img
+                        key={index}
+                        src={src}
+                        alt={`Satesoft African Solutions ${index + 1}`}
+                        className={`absolute inset-0 w-full h-full rounded-3xl object-cover transform transition-opacity duration-1000 ${
+                          index === currentImageIndex ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
             </div>
 
           </div>

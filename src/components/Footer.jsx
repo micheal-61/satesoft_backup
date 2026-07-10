@@ -39,7 +39,9 @@ function Footer() {
             <div className="lg:col-span-4">
               <div className="mb-8">
                 <Link to="/">
-                  <h2 className="text-white font-bold text-3xl tracking-tight mb-4">SATESOFT</h2>
+                  <h2 className="text-white font-bold text-3xl tracking-tight mb-4">
+                  <span className="text-white">SATE</span><span className="text-primary-500">SOFT</span>
+                </h2>
                 </Link>
                 <p className="mb-6 leading-relaxed text-white/70">
                   Globally monetize plug-and-play data it solu monotonectally disseminate oriented busine multifunctional mind design.

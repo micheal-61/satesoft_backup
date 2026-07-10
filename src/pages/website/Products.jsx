@@ -3,19 +3,19 @@ import { Link } from "react-router-dom";
 
 const projectsData = [
   {
-    id: 1,
+    id: "duqact",
     title: "Software Development",
     category: "Software",
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&h=400&q=80"
   },
   {
-    id: 2,
+    id: "karibyshoo",
     title: "IT Management",
     category: "Consulting",
     image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&h=400&q=80"
   },
   {
-    id: 3,
+    id: "founddocument",
     title: "Data Analysis",
     category: "Analytics",
     image: "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=600&h=400&q=80"
@@ -43,12 +43,13 @@ const Products = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projectsData.map((project) => (
-              <div className="group" key={project.id}>
+              <Link to={`/products/${project.id}`} key={project.id} className="group block">
                 <div className="card p-0 overflow-hidden bg-surface border border-border shadow-md hover:shadow-xl transition-all duration-300 rounded-[1rem]">
                   <div className="relative overflow-hidden aspect-[3/2]">
                     <div className="absolute inset-0 bg-primary-900/20 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
                     <img 
                       decoding="async" 
+                      loading="lazy"
                       src={project.image} 
                       alt={project.title} 
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
@@ -56,12 +57,12 @@ const Products = () => {
                   </div>
                   <div className="p-6 relative z-20 bg-surface -mt-4 mx-4 rounded-xl shadow-lg border border-border/50 group-hover:-translate-y-2 transition-transform duration-300">
                     <h3 className="text-xl font-bold text-text mb-2">
-                      <Link to={`/products/${project.id}`} className="hover:text-primary-600 transition-colors">{project.title}</Link>
+                      {project.title}
                     </h3>
                     <p className="text-primary-500 font-medium text-sm mb-0 uppercase tracking-wider">{project.category}</p>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
