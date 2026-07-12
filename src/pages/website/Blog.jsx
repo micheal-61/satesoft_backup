@@ -6,48 +6,48 @@ const dummyArticles = [
   {
     id: 1,
     slug: "future-of-ai-in-africa",
-    title: "The Future of AI in African Supply Chains",
-    publishDate: "12 Dec, 2024",
+    title: "Satesoft Expands Operations to West Africa",
+    publishDate: "2026-03-20",
     author: "Admin",
     comments: 5,
-    category: "AI",
-    excerpt: "Discover how intelligent systems are helping businesses streamline operations and unlock new growth opportunities across the continent.",
+    category: "Company News",
+    excerpt: "We are thrilled to announce our new subsidiary in Nigeria, marking a significant milestone in our mission to digitize Africa's informal economy.",
     readTime: "6 min read",
     imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500"
   },
   {
     id: 2,
     slug: "fintech-security-2026",
-    title: "Securing Cross-Border Payments in 2026",
-    publishDate: "15 Nov, 2024",
+    title: "Dugact 2.0: Now with AI-Powered Predictive Analytics",
+    publishDate: "2026-03-15",
     author: "Admin",
     comments: 2,
-    category: "Payments",
-    excerpt: "Learn how modern payment infrastructure is building trust through secure, seamless, and scalable digital experiences.",
+    category: "Product Updates",
+    excerpt: "The latest update to our retail intelligence platform brings advanced forecasting tools to small business owners.",
     readTime: "4 min read",
     imageUrl: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=800&h=500"
   },
   {
     id: 3,
     slug: "satesoft-series-b",
-    title: "Satesoft Announces Series B Funding",
-    publishDate: "03 Oct, 2024",
+    title: "Satesoft Partners with Regional Banks for Financial Inclusion",
+    publishDate: "2026-03-05",
     author: "Admin",
     comments: 8,
-    category: "Funding",
-    excerpt: "A look at the momentum behind Satesoft’s growth and the role of innovation in shaping the next chapter of our journey.",
+    category: "Partnerships",
+    excerpt: "New integration allows Dugact users to access micro-loans directly through the platform.",
     readTime: "5 min read",
     imageUrl: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=800&h=500"
   },
   {
     id: 4,
     slug: "digital-operations-blueprint",
-    title: "Building a Smarter Digital Operations Blueprint",
-    publishDate: "21 Sep, 2024",
+    title: "Satesoft Launches Next-Generation Cloud Platform",
+    publishDate: "2026-02-28",
     author: "Admin",
     comments: 3,
-    category: "Innovation",
-    excerpt: "Practical guidance for teams that want to modernize how they operate, collaborate, and scale with confidence.",
+    category: "Company News",
+    excerpt: "Our new cloud infrastructure delivers faster performance, enhanced security, and greater scalability for businesses across Africa.",
     readTime: "7 min read",
     imageUrl: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=80&w=800&h=500"
   }
@@ -87,7 +87,7 @@ const Blog = () => {
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-text mb-4">Fresh ideas for modern teams</h2>
           <p className="max-w-2xl mx-auto text-lg text-text/70">
-            Explore thoughtful stories, product updates, and practical insights that keep you ahead of what’s next.
+            Company News.
           </p>
         </div>
 
@@ -129,7 +129,7 @@ const Blog = () => {
                 <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-white">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] backdrop-blur-sm mb-3">
                     <FaTag className="text-primary-300" />
-                    Featured Story
+                    Company News
                   </div>
                   <h3 className="text-2xl sm:text-3xl font-bold mb-3">{featuredArticle.title}</h3>
                   <p className="text-sm sm:text-base text-slate-200 mb-4">{featuredArticle.excerpt}</p>
