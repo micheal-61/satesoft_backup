@@ -4,35 +4,35 @@ import { Link } from "react-router-dom";
 const servicesData = [
   {
     id: 1,
-    title: "Website Development & Hosting",
-    images: ["/assets/images/web_design.png", "/assets/images/web_hosting.png"],
+    title: "Big Data Analytics",
+    images: ["/assets/images/african_tech_board_1_1783002554188.png"],
     description:
-      "Our hosting is affordable at a fixed annual fee. The fee covers a domain of your choice and ensures reliable performance, security, and scalability.",
-    link: "/services/website-development",
+      "We don't just collect data; we make it meaningful. Our analytics engines are built to handle the scale and complexity of African market dynamics.",
+    link: "/contact",
   },
   {
     id: 2,
-    title: "Client Support",
-    image: "/assets/images/client_support.png",
+    title: "African Market Solutions",
+    image: "/assets/images/african_tech_team_hero_1783002251745.png",
     description:
-      "We aim to be our clients' first point of contact for all support and business development issues, providing timely and effective solutions.",
-    link: "/services/client-support",
+      "Software built for Africa, in Africa. We understand the infrastructure challenges and build resilient systems that work everywhere.",
+    link: "/contact",
   },
   {
     id: 3,
-    title: "Research, Design & Development",
-    image: "/assets/images/future.png",
+    title: "Strategic R&D",
+    image: "/assets/images/african_tech_man_1783002340575.png",
     description:
-      "Research and development play a critical role in innovation, helping organizations prepare for future opportunities and challenges.",
-    link: "/services/research-design",
+      "Our research lab is constantly exploring new ways to solve continental problems through AI, IoT, and advanced software engineering.",
+    link: "/contact",
   },
   {
     id: 4,
-    title: "Social Media Management",
-    image: "/assets/images/social.png",
+    title: "Enterprise Security",
+    image: "/assets/images/african_tech_meeting_1783002294603.png",
     description:
-      "We use our expertise to help clients maximize engagement, visibility, and value across social media platforms.",
-    link: "/services/social-media",
+      "Protecting your data is our priority. We implement world-class security standards tailored for local compliance requirements.",
+    link: "/contact",
   },
 ];
 
@@ -148,28 +148,59 @@ export default function OurServices() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary-50 rounded-full blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col items-center justify-center mb-16 text-center">
-          <h5 className="uppercase tracking-widest text-primary-500 font-semibold text-sm mb-3">SATESOFT SERVICES</h5>
-          <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight max-w-3xl">
-            How Professional IT Services<br /> Can Drive <span className="text-primary-500">Success.</span>
-          </h1>                            
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h5 className="uppercase tracking-[4px] text-primary-500 font-semibold text-sm mb-4">
+            SATESOFT SERVICES
+          </h5>
+          <h2 className="text-4xl md:text-5xl font-bold leading-tight text-text">
+            How Professional IT Services <br />
+            Can Drive <span className="text-primary-500">Success.</span>
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {servicesData.map((service) => (
-            <div key={service.id} className="group">
-              <div className="card h-full flex flex-col items-start border border-border bg-white hover:border-primary-200 transition-all duration-300">
-                <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mb-6 group-hover:bg-primary-500 transition-colors duration-300">
-                  <i className={`${service.icon} text-3xl text-primary-500 group-hover:text-white transition-colors duration-300`}></i>
+        {/* Main Card */}
+        <div
+          id="carousel-container"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          className={`transition-opacity duration-1000 ease-in-out ${
+            fade ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div className="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-shadow duration-500 p-8 md:p-12">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Content */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-primary-500 font-semibold">
+                    {String(activeIndex + 1).padStart(2, "0")} /{" "}
+                    {String(servicesData.length).padStart(2, "0")}
+                  </span>
                 </div>
-                
-                <h3 className="text-xl font-bold text-text mb-4 group-hover:text-primary-600 transition-colors">{service.title}</h3>
-                <p className="text-text/70 mb-8 flex-grow leading-relaxed">{service.description}</p>
-                
-                <div className="mt-auto">
-                  <Link to={service.link} className="inline-flex items-center gap-2 text-sm font-bold text-primary-500 hover:text-primary-700 transition-colors">
-                    <i className="fas fa-plus text-xs"></i> READ MORE
-                  </Link>
+
+                <h3 className="text-3xl md:text-4xl font-bold mb-5 text-text">
+                  {service.title}
+                </h3>
+
+                <p className="text-text/70 text-lg leading-relaxed mb-8 min-h-[100px]">
+                  {service.description}
+                </p>
+
+                {/* Trust Indicators */}
+                <div className="flex flex-wrap gap-4 text-sm text-text/60 mb-8">
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-500">✓</span> Reliable
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-500">✓</span> Scalable
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-500">✓</span> Secure
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-500">✓</span> Professional Support
+                  </span>
                 </div>
 
                 <Link
@@ -196,6 +227,42 @@ export default function OurServices() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Controls - Clean, professional navigation only */}
+        <div className="flex justify-center items-center gap-4 mt-10">
+          <button
+            onClick={prevCard}
+            aria-label="Previous Service"
+            className="w-12 h-12 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-primary-50 hover:border-primary-200 hover:shadow-md transition-all duration-300 flex items-center justify-center text-xl text-text/70 hover:text-primary-600"
+          >
+            ←
+          </button>
+
+          <button
+            onClick={nextCard}
+            aria-label="Next Service"
+            className="w-12 h-12 rounded-full bg-primary-500 text-white shadow-md hover:bg-primary-600 hover:shadow-lg transition-all duration-300 flex items-center justify-center text-xl"
+          >
+            →
+          </button>
+        </div>
+
+        {/* Indicators */}
+        <div className="flex justify-center gap-3 mt-8">
+          {servicesData.map((serviceItem, index) => (
+            <button
+              key={serviceItem.id}
+              title={serviceItem.title}
+              onClick={() => changeCard(index)}
+              aria-label={`Go to ${serviceItem.title}`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                activeIndex === index
+                  ? "w-12 bg-primary-500"
+                  : "w-3 bg-gray-300 hover:bg-gray-400"
+              }`}
+            />
           ))}
         </div>
       </div>
