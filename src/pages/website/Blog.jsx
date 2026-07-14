@@ -123,7 +123,7 @@ const Blog = () => {
         {filteredArticles.length > 0 ? (
           <>
             <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] mb-8">
-              <Link to={`/blog/${featuredArticle.slug}`} className="group relative overflow-hidden rounded-3xl border border-border bg-surface shadow-lg hover:shadow-2xl transition-all duration-300">
+              <Link to={`/blog/${featuredArticle.slug}`} className="group relative overflow-hidden rounded-[0.3rem] border border-border bg-surface shadow-lg hover:shadow-2xl transition-all duration-300">
                 <img src={featuredArticle.imageUrl} alt={featuredArticle.title} className="h-96 w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-white">
@@ -143,8 +143,8 @@ const Blog = () => {
 
               <div className="space-y-4">
                 {remainingArticles.slice(0, 2).map((article) => (
-                  <Link key={article.id} to={`/blog/${article.slug}`} className="group flex gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                    <img src={article.imageUrl} alt={article.title} className="h-24 w-24 flex-shrink-0 rounded-xl object-cover" />
+                  <Link key={article.id} to={`/blog/${article.slug}`} className="group flex gap-4 rounded-[0.3rem] border border-border bg-surface p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <img src={article.imageUrl} alt={article.title} className="h-24 w-24 flex-shrink-0 rounded-[0.3rem] object-cover" />
                     <div className="min-w-0">
                       <div className="mb-2 inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-600">
                         {article.category}
@@ -161,7 +161,7 @@ const Blog = () => {
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredArticles.map((article) => (
-                <div key={article.id} className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                <div key={article.id} className="group flex flex-col overflow-hidden rounded-[0.3rem] border border-border bg-surface shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                   <div className="relative h-56 overflow-hidden">
                     <img src={article.imageUrl} alt={article.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute left-4 top-4 rounded-full bg-primary-600/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-sm">
