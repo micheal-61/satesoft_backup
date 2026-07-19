@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Appheader() {
   const [scrolled, setScrolled] = useState(false);
+  const [companyOpen, setCompanyOpen] = useState(false);
   const location = useLocation();
+  const companyRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -13,8 +15,22 @@ export default function Appheader() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (companyRef.current && !companyRef.current.contains(e.target)) {
+        setCompanyOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setCompanyOpen(false);
+  }, [location]);
+
   return (
-    <header className="w-full z-50 transition-all duration-300">
+      <header className="w-full z-[100] transition-all duration-300">
       {/* Top Header - Hidden on mobile */}
       <div className="hidden md:block bg-surface border-b border-border py-2 text-xs text-text/80">
         <div className="container mx-auto px-4 md:px-6">
@@ -60,19 +76,25 @@ export default function Appheader() {
             <nav className="hidden lg:flex items-center space-x-8">
               <Link to="/" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/' ? 'text-primary-500' : 'text-text'}`}>Home</Link>
               
-              <div className="relative group">
-                 <Link to="/about" className={`font-semibold text-sm transition-colors hover:text-primary-500 flex items-center gap-1 ${location.pathname === '/about' || location.pathname === '/board' || location.pathname === '/pricing' || location.pathname === '/testimonials' ? 'text-primary-500' : 'text-text'}`}>
-                  Company <i className="bi bi-chevron-down text-[10px]"></i>
-                </Link>
-                <div className="absolute top-full left-0 mt-2 w-56 bg-surface rounded-xl shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 overflow-hidden">
-                  <div className="py-2">
-                    <Link to="/about" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">About Us</Link>
-                    <Link to="/board" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Our Team</Link>
-                    <Link to="/testimonials" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Testimonials</Link>
-                    <Link to="/pricing" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Pricing</Link>
-                  </div>
-                </div>
-              </div>
+              <div className="relative group" ref={companyRef}>
+                 <button
+                   type="button"
+                   onClick={() => setCompanyOpen((o) => !o)}
+                   aria-haspopup="true"
+                   aria-expanded={companyOpen}
+                   className={`font-semibold text-sm transition-colors hover:text-primary-500 flex items-center gap-1 ${location.pathname === '/about' || location.pathname === '/board' || location.pathname === '/pricing' || location.pathname === '/testimonials' ? 'text-primary-500' : 'text-text'}`}
+                 >
+                   Company <i className={`bi bi-chevron-down text-[10px] transition-transform duration-200 ${companyOpen ? 'rotate-180' : ''}`}></i>
+                 </button>
+                  <div className={`absolute top-full left-0 mt-2 w-56 bg-surface rounded-xl shadow-xl border border-border overflow-hidden transition-all duration-300 transform z-[60] ${companyOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0'}`}>
+                   <div className="py-2">
+                     <Link to="/about" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">About Us</Link>
+                     <Link to="/board" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Our Team</Link>
+                     <Link to="/testimonials" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Testimonials</Link>
+                     <Link to="/pricing" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Pricing</Link>
+                   </div>
+                 </div>
+               </div>
 
               <Link to="/products" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/products' ? 'text-primary-500' : 'text-text'}`}>Portfolio</Link>
               <Link to="/services" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/services' ? 'text-primary-500' : 'text-text'}`}>Services</Link>
