@@ -1,18 +1,26 @@
 import React, { useState } from "react";
-import { FaPlay, FaTimes, FaEnvelope, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
+import { FaPlay, FaTimes } from "react-icons/fa";
+import axios from "axios";
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
   const [showVideo, setShowVideo] = useState(false);
+  const [status, setStatus] = useState({ type: "", message: "" });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Message sent successfully (offline mode)!");
-    setFormData({ name: "", email: "", subject: "", message: "" });
+    setStatus({ type: "", message: "" });
+    try {
+      await axios.post("/api/public/contact", formData);
+      setStatus({ type: "success", message: "Message sent successfully! We will get back to you soon." });
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      setStatus({ type: "error", message: error.response?.data?.error || "Failed to send message. Please try again." });
+    }
   };
 
   const contactInfo = [
@@ -99,6 +107,12 @@ const Contact = () => {
                 Or email us directly at <strong style={{ color: "var(--color-primary-600)" }}>info@satesoft.com</strong>.
               </p>
             </div>
+
+            {status.message && (
+              <div className={`mb-4 p-4 rounded-xl ${status.type === "success" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+                {status.message}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

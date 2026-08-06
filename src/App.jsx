@@ -6,7 +6,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import AppRoutes from "./routes";
+import AppRouter from "./AppRouter";
 
 function App() {
   useEffect(() => {
@@ -19,7 +19,7 @@ function App() {
 
   return (
     <div className="App">
-      <AppRoutes />
+      <AppRouter />
     </div>
   );
 }

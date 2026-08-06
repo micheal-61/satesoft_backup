@@ -9,10 +9,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If we have a token, set it in axios defaults
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser({ authenticated: true });
     } else {
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);
@@ -23,16 +21,18 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const response = await axios.post('/api/auth/login', { username, password });
-      const { token: newToken } = response.data;
-      
+      const { token: newToken, user: loggedInUser } = response.data;
+
       localStorage.setItem('cms_auth_token', newToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      setUser({ authenticated: true, ...loggedInUser });
       setToken(newToken);
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
-      return { 
-        success: false, 
-        message: error.response?.data?.error || 'Login failed' 
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Login failed'
       };
     }
   };

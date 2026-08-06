@@ -1,0 +1,1545 @@
+❌ Database initialization error: Error: Unknown column 'logo_url' in 'field list'
+    at initializeDatabase (file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:117:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'logo_url' in 'field list'",
+  sql: '\n' +
+    '        INSERT INTO product_cards (title, subtitle, category, icon_name, logo_url, description, key_features)\n' +
+    '        VALUES\n' +
+    "          ('Duqact', 'Retail Intelligence for the African Market', 'Retail Intelligence', 'trending', 'https://via.placeholder.com/120?text=Duqact', 'Duqact empowers African retailers with real-time sales intelligence, inventory forecasting, and customer behavior analytics.', JSON_ARRAY('Real-time sales tracking', 'Inventory forecasting', 'Customer segmentation')),\n" +
+    "          ('Karibyshoo', 'Smart Visitor & Event Management', 'Visitor Management', 'user', 'https://via.placeholder.com/120?text=Karibyshoo', 'Karibyshoo streamlines visitor check-ins, event scheduling, and attendee engagement through an intuitive operations platform.', JSON_ARRAY('Smart check-in system', 'Event scheduling', 'Attendee engagement')),\n" +
+    "          ('FoundDocument', 'Intelligent Archiving & Retrieval', 'Document Management', 'document', 'https://via.placeholder.com/120?text=FoundDocument', 'FoundDocument automates document archiving, intelligent retrieval, and compliance management for modern enterprises.', JSON_ARRAY('Intelligent search', 'Automated archiving', 'Compliance tracking'))\n" +
+    '      '
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}
+❌ List Partners Error: Error: Table 'satesoft_db.partners' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:715:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.partners' doesn't exist",
+  sql: 'SELECT * FROM partners ORDER BY id'
+}
+❌ List Advisors Error: Error: Unknown column 'advisor_order' in 'order clause'
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:788:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_BAD_FIELD_ERROR',
+  errno: 1054,
+  sqlState: '42S22',
+  sqlMessage: "Unknown column 'advisor_order' in 'order clause'",
+  sql: 'SELECT * FROM advisors ORDER BY advisor_order, id'
+}
+❌ List News Error: Error: Table 'satesoft_db.news_posts' doesn't exist
+    at file:///C:/Users/miche/Desktop/ALL%20FOLDERS/satesoft_website/server.js:851:31
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\route.js:117:3)
+    at handle (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\lib\layer.js:152:17)
+    at C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:295:15
+    at processParams (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:582:12)
+    at next (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\router\index.js:291:5)
+    at read (C:\Users\miche\Desktop\ALL FOLDERS\satesoft_website\node_modules\body-parser\lib\read.js:53:5) {
+  code: 'ER_NO_SUCH_TABLE',
+  errno: 1146,
+  sqlState: '42S02',
+  sqlMessage: "Table 'satesoft_db.news_posts' doesn't exist",
+  sql: 'SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC'
+}

@@ -28,7 +28,7 @@ export default function AdminLogin() {
       <div className="bg-surface shadow-2xl p-8 sm:p-10 w-full max-w-md rounded-3xl border border-border">
         <div className="text-center mb-10">
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl shadow-lg" style={{
-            background: "conic-gradient(from 180deg at 50% 50%, var(--p500) 0deg, var(--p300) 360deg)"
+            background: "conic-gradient(from 180deg at 50% 50%, #3d9e41 0deg, #7ec583 360deg)"
           }}></div>
           <h4 className="text-3xl font-bold text-text mb-2 tracking-tight">CMS Admin</h4>
           <p className="text-text/50 font-medium">Sign in to manage Satesoft content</p>
