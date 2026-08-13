@@ -32,8 +32,8 @@ const FAQ = () => {
   };
 
   return (
-    <section id="FAQ" className="py-20 bg-bg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="FAQ" className="py-28 bg-bg">
+      <div className="max-w-7xl mx-auto px-8 sm:px-12 lg:px-20">
         <div className="flex flex-col lg:flex-row items-start gap-12 lg:gap-20">
           
           {/* Left Side: Image & Text */}

@@ -2,42 +2,51 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { FaArrowLeft, FaClock, FaShareAlt, FaUser } from "react-icons/fa";
 
-const blogDetailsData = {
-  "future-of-ai-in-africa": {
-    id: 1,
-    title: "Satesoft Expands Operations to West Africa",
-    category: "Company News",
-    date: "2026-03-20",
-    author: "Corporate Communications",
-    content: `Satesoft Corporation Limited is proud to announce the official registration
-    of its subsidiary in Nigeria. This expansion is a key part of our strategic
-    vision to provide inclusive technology solutions across the continent.
-
-    Our Nigerian team will focus on deploying Duacqt and Karibyshoo to local
-    retail and facility management sectors.
-
-    This move follows our successful operations in Kenya and Uganda, and we look
-    forward to bringing our smart, inclusive technology to the vibrant Nigerian
-    market.`
-  }
+const generateSlug = (title) => {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .substring(0, 50);
 };
 
 const BlogDetails = () => {
   const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [scrollProgress, setScrollProgress] = useState(0);
   const [copied, setCopied] = useState(false);
   const { slug } = useParams();
 
   useEffect(() => {
-    const selectedArticle = blogDetailsData[slug] || blogDetailsData["future-of-ai-in-africa"];
+    const fetchArticle = async () => {
+      try {
+        const response = await fetch('/api/news');
+        if (!response.ok) throw new Error('Failed to fetch news');
+        const data = await response.json();
 
-    if (!selectedArticle) return;
+        const matchedArticle = data.find(item => generateSlug(item.title) === slug);
 
-    setArticle({
-      ...selectedArticle,
-      publishDate: selectedArticle.date,
-      imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500"
-    });
+        if (matchedArticle) {
+          setArticle({
+            ...matchedArticle,
+            publishDate: matchedArticle.date,
+            imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500",
+            readTime: "5 min read",
+            comments: 0,
+            views: 0,
+          });
+        } else {
+          setError("Article not found.");
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticle();
   }, [slug]);
 
   useEffect(() => {
@@ -69,8 +78,17 @@ const BlogDetails = () => {
     return Math.max(2, Math.ceil(words / 180));
   }, [paragraphs]);
 
-  if (!article) {
+  if (loading) {
     return <div className="mx-auto min-h-screen max-w-4xl px-4 py-20 text-center text-lg font-medium text-text/70">Loading...</div>;
+  }
+
+  if (error || !article) {
+    return (
+      <div className="mx-auto min-h-screen max-w-4xl px-4 py-20 text-center">
+        <p className="text-lg font-medium text-red-500 mb-6">{error || "Article not found."}</p>
+        <Link to="/blog" className="btn-primary">Back to Blog</Link>
+      </div>
+    );
   }
 
   return (
@@ -82,7 +100,7 @@ const BlogDetails = () => {
         />
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-8 sm:px-12 lg:px-20">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <Link to="/blog" className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 font-semibold text-primary-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-50">
             <FaArrowLeft />
@@ -120,7 +138,7 @@ const BlogDetails = () => {
               <div className="mb-8 rounded-[0.3rem] border border-primary-100 bg-primary-50/70 p-4 text-sm text-text/80 shadow-sm sm:p-5">
                 <p className="font-semibold text-primary-700">Why this matters</p>
                 <p className="mt-2 leading-7">
-                  Satesoft is expanding its footprint across West Africa to bring smarter, more accessible technology to businesses and communities.
+                  {article.excerpt}
                 </p>
               </div>
 
@@ -139,13 +157,13 @@ const BlogDetails = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-600">At a glance</p>
               <h2 className="mt-3 text-xl font-bold text-text">What this update means</h2>
               <ul className="mt-5 space-y-3 text-sm text-text/70">
-                <li className="rounded-[0.3rem] border border-border bg-bg/70 p-3">A new West African subsidiary in Nigeria</li>
-                <li className="rounded-[0.3rem] border border-border bg-bg/70 p-3">Expanded delivery of Duacqt and Karibyshoo</li>
-                <li className="rounded-[0.3rem] border border-border bg-bg/70 p-3">A stronger local footprint for inclusive innovation</li>
+                <li className="rounded-[0.3rem] border border-border bg-bg/70 p-3">{article.category}</li>
+                <li className="rounded-[0.3rem] border border-border bg-bg/70 p-3">Published on {article.publishDate}</li>
+                <li className="rounded-[0.3rem] border border-border bg-bg/70 p-3">By {article.author}</li>
               </ul>
 
               <div className="mt-6 rounded-[0.3rem] border border-dashed border-primary-200 bg-primary-50/60 p-4 text-sm text-primary-700">
-                This announcement reflects our commitment to scale responsibly and serve more communities with practical technology.
+                {article.excerpt}
               </div>
             </div>
           </aside>

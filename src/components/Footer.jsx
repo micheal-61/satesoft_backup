@@ -1,28 +1,121 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import Logo from "./Logo";
 
 function Footer() {
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [privacyPolicy, setPrivacyPolicy] = useState(null);
+  const [serviceAgreement, setServiceAgreement] = useState(null);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFooterData = async () => {
+      try {
+        const [contactsRes, privacyRes, agreementRes, servicesRes] = await Promise.all([
+          fetch('/api/contacts').then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch('/api/privacy-policies').then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch('/api/service-agreements').then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch('/api/services').then(r => r.ok ? r.json() : []).catch(() => []),
+        ]);
+
+        const socials = contactsRes.filter(c => c.category === 'social_media');
+        setSocialLinks(socials);
+        setPrivacyPolicy(privacyRes.length > 0 ? privacyRes[0] : null);
+        setServiceAgreement(agreementRes.length > 0 ? agreementRes[0] : null);
+        setServices(servicesRes || []);
+      } catch (err) {
+        console.error('Failed to fetch footer data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFooterData();
+  }, []);
+
+  const getSocialIcon = (platform) => {
+    const iconMap = {
+      'facebook': 'bi-facebook',
+      'twitter': 'bi-twitter-x',
+      'instagram': 'bi-instagram',
+      'youtube': 'bi-youtube',
+      'linkedin': 'bi-linkedin',
+      'telegram': 'bi-telegram',
+      'github': 'bi-github',
+    };
+    return iconMap[platform?.toLowerCase()] || 'bi-link';
+  };
+
+  const getSocialLabel = (contactPoint) => {
+    if (!contactPoint) return 'Social';
+    const url = contactPoint.toLowerCase();
+    if (url.includes('facebook')) return 'Facebook';
+    if (url.includes('twitter') || url.includes('x.com')) return 'Twitter';
+    if (url.includes('instagram')) return 'Instagram';
+    if (url.includes('youtube')) return 'YouTube';
+    if (url.includes('linkedin')) return 'LinkedIn';
+    if (url.includes('telegram')) return 'Telegram';
+    if (url.includes('github')) return 'GitHub';
+    return 'Social';
+  };
+
+  // Navigation link configuration
+  const navigationLinks = {
+    company: [
+      { label: 'About Satesoft', path: '/about' },
+      { label: 'Our Team', path: '/board' },
+      { label: 'Blog', path: '/blog' },
+      { label: 'Contact Us', path: '/contact' },
+      { label: 'Testimonials', path: '/testimonials' },
+      { label: 'Our Partners', path: '/partners' },
+      { label: 'Environmental Sustainability', path: '/environmental' },
+    ],
+    legal: [
+      { label: 'Privacy Policy', path: '/privacy-policy', condition: privacyPolicy },
+      { label: 'Service Agreement', path: '/service-agreement', condition: serviceAgreement },
+      { label: 'Supports', path: '/support' },
+    ],
+    admin: [
+      { label: 'Admin', path: '/admin/login' },
+    ]
+  };
+
+  // Social media platforms configuration
+  const socialPlatforms = ['facebook', 'twitter', 'instagram', 'youtube', 'linkedin', 'telegram'];
+
   return (
-    <>
-      {/* Top Address Banner */}
-      <div className="bg-primary-50 border-t border-border py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center text-2xl">
+    <div>
+      {/* ============================================================
+          TOP BANNER - Contact & Brand Message
+          ============================================================ */}
+      <div className="bg-primary-50/60 border-t border-border py-4">
+        <div className="container mx-auto px-8 md:px-12 lg:px-20">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Brand Message */}
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center text-lg">
                 <i className="bi bi-lightning-charge-fill" aria-hidden="true"></i>
               </div>
               <div>
-                <h3 className="text-xl md:text-2xl font-bold text-text mb-0">Elevating Customer Experience.</h3>
+                <h3 className="text-base md:text-lg font-bold text-text mb-0">
+                  Elevating Customer Experience.
+                </h3>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center text-2xl">
+            
+            {/* Phone Contact */}
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center text-lg">
                 <i className="bi bi-telephone-outbound-fill" aria-hidden="true"></i>
               </div>
               <div>
-                <a href="tel:+44920090505" className="text-xl md:text-2xl font-bold text-primary-500 hover:text-primary-600 transition-colors">
-                  +44 920 090 505
+                <a 
+                  href="tel:+44920090505" 
+                  className="text-base md:text-lg font-bold text-primary-500 hover:text-primary-600 transition-colors relative group"
+                >
+                  +256 749095200
+                  +256 791248471
+                  <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-primary-500 transition-all duration-300 group-hover:w-full"></span>
                 </a>
               </div>
             </div>
@@ -30,61 +123,136 @@ function Footer() {
         </div>
       </div>
 
-      {/* Main Footer Area */}
-      <div className="bg-[#060A22] pt-16 pb-8 text-white/70">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 mb-12">
+      {/* ============================================================
+          MAIN FOOTER - Navigation & Information
+          ============================================================ */}
+      <div 
+        className="bg-[#f5f5f5] pt-8 pb-6 text-slate-600" 
+        style={{ fontFamily: "'Segoe UI', sans-serif" }}
+      >
+        <div className="container mx-auto px-8 md:px-12 lg:px-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 mb-8">
             
-            {/* About Widget */}
+            {/* ==========================================================
+                COLUMN 1: About & Social Media
+                ========================================================== */}
             <div className="lg:col-span-4">
-              <div className="mb-8">
+              {/* Logo */}
+              <div className="mb-4">
                 <Link to="/">
-                  <h2 className="text-white font-bold text-3xl tracking-tight mb-4">
-                  <span className="text-white">SATE</span><span className="text-primary-500">SOFT</span>
-                </h2>
+                  <Logo textClassName="text-[#72bf24]" showText={true} size="lg" />
                 </Link>
-                <p className="mb-6 leading-relaxed text-white/70">
-                  Globally monetize plug-and-play data it solu monotonectally disseminate oriented busine multifunctional mind design.
-                </p>
-                <div className="flex gap-3">
-                  <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary-500 transition-colors"><i className="bi bi-facebook"></i></a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary-500 transition-colors"><i className="bi bi-twitter-x"></i></a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary-500 transition-colors"><i className="bi bi-instagram"></i></a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-primary-500 transition-colors"><i className="bi bi-youtube"></i></a>
-                </div>
+              </div>
+              
+              {/* Description - Changed to lime green */}
+              <p className="mt-3 mb-4 leading-relaxed text-[#72bf24] text-[14px]">
+                Empowering businesses across Africa with innovative cloud solutions, 
+                intelligent software, and actionable data analytics.
+              </p>
+              
+              {/* Social Media Icons */}
+              <div className="flex gap-2">
+                {loading ? (
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="w-9 h-9 rounded-full bg-slate-300 animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : (
+                  socialPlatforms.map((platform) => {
+                    const link = socialLinks.find(l => {
+                      const url = l.contact_point?.toLowerCase() || '';
+                      if (platform === 'twitter') {
+                        return url.includes('twitter') || url.includes('x.com');
+                      }
+                      return url.includes(platform);
+                    });
+                    const isActive = !!link;
+                    return (
+                      <a 
+                        key={platform}
+                        href={isActive ? link.contact_point : '#'}
+                        target={isActive ? "_blank" : undefined}
+                        rel={isActive ? "noopener noreferrer" : undefined}
+                        className={`w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 transition-colors ${
+                          isActive 
+                            ? 'hover:bg-[#72bf24] hover:text-white cursor-pointer' 
+                            : 'opacity-50 cursor-not-allowed pointer-events-none'
+                        }`}
+                        title={
+                          isActive 
+                            ? getSocialLabel(link.contact_point) 
+                            : `${platform.charAt(0).toUpperCase() + platform.slice(1)} - No link configured`
+                        }
+                      >
+                        <i className={isActive ? `bi bi-${platform === 'twitter' ? 'twitter-x' : platform}` : `bi bi-${platform === 'twitter' ? 'twitter-x' : platform}`}></i>
+                      </a>
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            {/* Useful Links Widget */}
+            {/* ==========================================================
+                COLUMN 2: Company Navigation
+                ========================================================== */}
             <div className="lg:col-span-2">
-              <h3 className="text-xl font-bold text-white mb-6 relative pb-2 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-12 after:bg-primary-500">Useful Links</h3>
-              <ul className="space-y-3">
-                <li><Link to="/about" className="hover:text-primary-500 transition-colors block">About Company</Link></li>
-                <li><Link to="/board" className="hover:text-primary-500 transition-colors block">Meet Our Team</Link></li>
-                <li><Link to="/blog" className="hover:text-primary-500 transition-colors block">Latest Blog</Link></li>
-                <li><Link to="/contact" className="hover:text-primary-500 transition-colors block">Contact Us</Link></li>
-                <li><Link to="/testimonials" className="hover:text-primary-500 transition-colors block">Testimonials</Link></li>
-                <li><Link to="/admin/login" className="text-primary-400 font-semibold hover:text-primary-300 transition-colors block mt-2">Admin Portal</Link></li>
+              <h3 className="text-[15px] font-semibold text-text mb-4 relative pb-1.5">
+                Company
+              </h3>
+              <ul className="space-y-2">
+                {navigationLinks.company.map((link) => (
+                  <li key={link.path}>
+                    <Link 
+                      to={link.path} 
+                      className="hover:text-[#72bf24] transition-colors block font-normal text-[13px] relative group w-fit"
+                    >
+                      {link.label}
+                      <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* Services Widget */}
+            {/* ==========================================================
+                COLUMN 3: Services
+                ========================================================== */}
             <div className="lg:col-span-3">
-              <h3 className="text-xl font-bold text-white mb-6 relative pb-2 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-12 after:bg-primary-500">Services</h3>
-              <ul className="space-y-3">
-                <li><Link to="/services" className="hover:text-primary-500 transition-colors block">Cyber Security</Link></li>
-                <li><Link to="/services" className="hover:text-primary-500 transition-colors block">UI/UX Design</Link></li>
-                <li><Link to="/services" className="hover:text-primary-500 transition-colors block">App Development</Link></li>
-                <li><Link to="/services" className="hover:text-primary-500 transition-colors block">Technology Consult</Link></li>
-                <li><Link to="/services" className="hover:text-primary-500 transition-colors block">IT Solution</Link></li>
+              <h3 className="text-[15px] font-semibold text-text mb-4 relative pb-1.5 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-10 after:bg-[#72bf24]">
+                Services
+              </h3>
+              <ul className="space-y-2">
+                {loading ? (
+                  <li className="text-[13px] text-text/40">Loading services...</li>
+                ) : services.length > 0 ? (
+                  services.slice(0, 5).map((service) => (
+                    <li key={service.id}>
+                      <Link 
+                        to={`/services/${service.id}`} 
+                        className="hover:text-[#72bf24] transition-colors block font-normal text-[13px] relative group w-fit"
+                      >
+                        {service.title}
+                        <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-[13px] text-text/40">No services available</li>
+                )}
               </ul>
             </div>
 
-            {/* Newsletter Widget */}
+            {/* ==========================================================
+                COLUMN 4: Newsletter
+                ========================================================== */}
             <div className="lg:col-span-3">
-              <h3 className="text-xl font-bold text-white mb-6 relative pb-2 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-12 after:bg-primary-500">Newsletter</h3>
-              <p className="mb-6 text-white/70">
-                Globally monetize plug-and-play data it solu monotonectally disseminate oriented multifunctional mind design.
+              <h3 className="text-[15px] font-semibold text-text mb-4 relative pb-1.5 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-10 after:bg-[#72bf24]">
+                Newsletter
+              </h3>
+              {/* Newsletter description - Changed to lime green */}
+              <p className="mb-4 text-[#72bf24] text-[14px]">
+                Subscribe to get the latest news, updates, and product insights from Satesoft.
               </p>
               <form action="#" method="post" className="relative">
                 <input 
@@ -92,27 +260,62 @@ function Footer() {
                   name="EMAIL" 
                   placeholder="Enter Your E-mail" 
                   required 
-                  className="w-full bg-white/5 border border-white/10 rounded-md py-3 pl-4 pr-12 text-white placeholder-white/40 focus:outline-none focus:border-primary-500 transition-colors"
+                  className="w-full bg-white border border-slate-300 rounded-lg py-2.5 pl-3.5 pr-11 text-[13px] text-text placeholder:text-text/40 focus:outline-none focus:border-[#72bf24] transition-colors"
                 />
-                <button type="submit" className="absolute right-0 top-0 bottom-0 px-4 bg-primary-500 text-white rounded-r-md hover:bg-primary-600 transition-colors">
-                  <i className="bi bi-send"></i>
+                <button 
+                  type="submit" 
+                  className="absolute right-0 top-0 bottom-0 px-3.5 bg-[#72bf24] text-white rounded-r-lg hover:bg-[#62a71e] transition-colors"
+                >
+                  <i className="bi bi-send text-sm"></i>
                 </button>
               </form>
             </div>
 
           </div>
 
-          {/* Copyright Area */}
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="mb-0 text-sm">© Copyright 2026 By Satesoft. All rights reserved.</p>
-            <ul className="flex gap-6 text-sm mb-0">
-              <li><Link to="/privacy-policy" className="hover:text-primary-500 transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/support" className="hover:text-primary-500 transition-colors">Supports</Link></li>
+          {/* ============================================================
+              COPYRIGHT & LEGAL - Bottom Bar
+              ============================================================ */}
+          <div className="border-t border-slate-300 pt-4 flex flex-col md:flex-row justify-between items-center gap-3">
+            {/* Copyright */}
+            <p className="mb-0 text-[12px] font-normal">
+              © Copyright 2026 By <span className="text-[#72bf24] font-semibold">Satesoft</span>. All rights reserved.
+            </p>
+            
+            {/* Legal Links */}
+            <ul className="flex gap-5 text-[12px] mb-0">
+              {navigationLinks.legal.map((link) => {
+                // Only render if condition is met (for conditional links)
+                if (link.condition === undefined || link.condition) {
+                  return (
+                    <li key={link.path}>
+                      <Link 
+                        to={link.path} 
+                        className="hover:text-[#72bf24] transition-colors font-normal relative group"
+                      >
+                        {link.label}
+                        <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
+                      </Link>
+                    </li>
+                  );
+                }
+                return null;
+              })}
+              {/* Admin Link */}
+              <li>
+                <Link 
+                  to="/admin/login" 
+                  className="text-[#72bf24] font-normal hover:text-[#62a71e] transition-colors relative group"
+                >
+                  Admin
+                  <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

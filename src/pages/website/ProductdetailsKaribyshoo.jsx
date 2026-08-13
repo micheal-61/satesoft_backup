@@ -11,8 +11,8 @@ function ProductDetailsKaribyshoo() {
   ];
 
   return (
-    <div className="py-20 bg-bg min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="py-28 bg-bg min-h-screen">
+      <div className="container mx-auto px-8 sm:px-12 lg:px-20">
         {/* Back Button */}
         <div className="mb-12">
           <Link

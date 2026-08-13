@@ -1,109 +1,71 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { GraphUpArrow, ArrowLeft, ArrowRight, CheckLg } from "react-bootstrap-icons";
+import { FaArrowRight, FaChevronLeft, FaChevronRight, FaCheckCircle } from "react-icons/fa";
 
-const servicesData = [
-  {
-    id: 1,
-    title: "Big Data Analytics",
-    subtitle: "Data That Means Something",
-    images: ["/assets/images/african_tech_board_1_1783002554188.png"],
-    description:
-      "We don't just collect data; we make it meaningful. Our analytics engines are built to handle the scale and complexity of African market dynamics.",
-    summary:
-      "Turn scattered market signals into clear decisions. We help African businesses understand their customers and act on real evidence, not guesswork.",
-    features: [
-      "Analytics built for African markets",
-      "Handles scale & complexity",
-      "Meaningful, actionable insights",
-      "Resilient data pipelines",
-    ],
-  },
-  {
-    id: 2,
-    title: "African Market Solutions",
-    subtitle: "Software Built In Africa, For Africa",
-    image: "/assets/images/african_tech_team_hero_1783002251745.png",
-    description:
-      "Software built for Africa, in Africa. We understand the infrastructure challenges and build resilient systems that work everywhere.",
-    summary:
-      "Systems designed for real African conditions — low connectivity, diverse languages, and fast growth — so your software works wherever your customers are.",
-    features: [
-      "Software built for Africa",
-      "Resilient, offline-capable systems",
-      "Infrastructure-aware design",
-      "Works everywhere",
-    ],
-  },
-  {
-    id: 3,
-    title: "Strategic R&D",
-    subtitle: "Inventing Tomorrow's Solutions",
-    image: "/assets/images/african_tech_man_1783002340575.png",
-    description:
-      "Our research lab is constantly exploring new ways to solve continental problems through AI, IoT, and advanced software engineering.",
-    summary:
-      "Stay ahead of change. We explore AI, IoT, and new engineering so your business is ready for tomorrow's problems, not just today's.",
-    features: [
-      "AI & IoT exploration",
-      "Advanced software engineering",
-      "Continental problem solving",
-      "Continuous research lab",
-    ],
-  },
-  {
-    id: 4,
-    title: "Enterprise Security",
-    subtitle: "Your Data, Protected",
-    image: "/assets/images/african_tech_meeting_1783002294603.png",
-    description:
-      "Protecting your data is our priority. We implement world-class security standards tailored for local compliance requirements.",
-    summary:
-      "Your data stays yours. We apply global security standards tuned to local regulations, so trust and compliance travel together.",
-    features: [
-      "World-class security standards",
-      "Local compliance tailored",
-      "Proactive data protection",
-      "Continuous monitoring",
-    ],
-  },
-];
-
-export default function OurServices() {
+const OurServices = () => {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [fade, setFade] = useState(true);
-  const [cycleCount, setCycleCount] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [touchStartX, setTouchStartX] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [detail, setDetail] = useState(null);
+  const [imageError, setImageError] = useState(false);
   const autoCycleTimer = useRef(null);
 
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch('/api/services');
+        if (!response.ok) throw new Error('Failed to fetch services');
+        const data = await response.json();
+        setServices(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchServices();
+  }, []);
+
   const changeCard = (targetIndex) => {
+    if (targetIndex === activeIndex || services.length === 0) return;
     setFade(false);
     setImageLoaded(false);
+    setImageError(false);
     setTimeout(() => {
       setActiveIndex(targetIndex);
-      setCycleCount((prev) => prev + 1);
       setFade(true);
-    }, 1000);
+    }, 500);
   };
 
   const nextCard = () => {
-    changeCard((prev) => (prev + 1) % servicesData.length);
+    if (services.length > 0) {
+      changeCard((activeIndex + 1) % services.length);
+    }
   };
 
   const prevCard = () => {
-    changeCard((prev) => (prev === 0 ? servicesData.length - 1 : prev - 1));
+    if (services.length > 0) {
+      changeCard(activeIndex === 0 ? services.length - 1 : activeIndex - 1);
+    }
   };
 
-  // Auto-slide (paused while a detail view is open)
+  // Auto-play with pause on hover
   useEffect(() => {
-    if (detail || isPaused) return;
+    if (services.length === 0 || isPaused) {
+      if (autoCycleTimer.current) {
+        clearInterval(autoCycleTimer.current);
+        autoCycleTimer.current = null;
+      }
+      return;
+    }
 
     autoCycleTimer.current = setInterval(() => {
       nextCard();
-    }, 7000);
+    }, 6000);
 
     return () => {
       if (autoCycleTimer.current) {
@@ -111,15 +73,11 @@ export default function OurServices() {
         autoCycleTimer.current = null;
       }
     };
-  }, [activeIndex, isPaused, detail]);
+  }, [activeIndex, isPaused, services.length]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (detail) {
-        if (e.key === "Escape") setDetail(null);
-        return;
-      }
       if (e.key === "ArrowRight") {
         e.preventDefault();
         nextCard();
@@ -132,9 +90,9 @@ export default function OurServices() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [detail]);
+  }, [services.length]);
 
-  // Touch/Swipe support for mobile
+  // Touch support
   useEffect(() => {
     const handleTouchStart = (e) => {
       setTouchStartX(e.touches[0].clientX);
@@ -146,11 +104,8 @@ export default function OurServices() {
       const threshold = 50;
 
       if (Math.abs(diff) > threshold) {
-        if (diff > 0) {
-          nextCard();
-        } else {
-          prevCard();
-        }
+        if (diff > 0) nextCard();
+        else prevCard();
       }
       setTouchStartX(0);
     };
@@ -167,227 +122,217 @@ export default function OurServices() {
         element.removeEventListener("touchend", handleTouchEnd);
       }
     };
-  }, [touchStartX]);
+  }, [touchStartX, services.length]);
 
-  const service = servicesData[activeIndex];
-  const imageToShow = service.images
-    ? service.images[cycleCount % service.images.length]
-    : service.image;
-
-  // ---- Detail "page" view (everything in this single file) ----
-  if (detail) {
+  // Loading state
+  if (loading) {
     return (
-      <section className="py-20 bg-bg min-h-screen relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-50 rounded-full blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Back Button */}
-          <div className="mb-12">
-            <button
-              onClick={() => setDetail(null)}
-              className="inline-flex items-center text-text font-bold tracking-widest text-sm hover:text-primary-500 transition-colors uppercase group"
-            >
-              <ArrowLeft className="mr-2 transform group-hover:-translate-x-1 transition-transform" />
-              BACK TO SERVICES
-            </button>
+      <section className="min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto">
+            <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-[#72bf24] border-t-transparent rounded-full animate-spin"></div>
           </div>
-
-          <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-12 lg:gap-20">
-            {/* Left Section - Description + Image */}
-            <div className="w-full lg:w-3/5 text-left flex flex-col justify-center">
-              <div className="mb-8 w-24 h-24 bg-primary-100 rounded-3xl flex items-center justify-center border border-primary-200 shadow-sm">
-                <GraphUpArrow size={48} className="text-primary-600" />
-              </div>
-
-              <h1 className="font-bold text-4xl md:text-5xl lg:text-6xl text-text mb-6 tracking-tight leading-tight">
-                {detail.title}
-              </h1>
-
-              <h5 className="uppercase text-primary-500 tracking-widest font-bold mb-8">
-                {detail.subtitle}
-              </h5>
-
-              <p className="text-xl text-text/70 leading-relaxed max-w-2xl mb-12">
-                {detail.description}
-              </p>
-
-              <div className="rounded-3xl overflow-hidden shadow-xl border border-border">
-                <img
-                  src={detail.images ? detail.images[0] : detail.image}
-                  alt={detail.title}
-                  className="w-full h-[320px] object-cover"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-
-            {/* Right Section - Theme Summary Card */}
-            <div className="w-full lg:w-2/5">
-              <div className="card h-full bg-white border border-border rounded-3xl shadow-xl p-8 lg:p-10 flex flex-col justify-center">
-                <h2 className="font-bold text-3xl text-text mb-6 flex items-center">
-                  <span className="text-primary-500 mr-3">
-                    <CheckLg size={32} />
-                  </span>
-                  What This Means
-                </h2>
-
-                <p className="text-lg text-text/70 leading-relaxed mb-8">
-                  {detail.summary}
-                </p>
-
-                <ul className="space-y-4 mb-10">
-                  {detail.features.map((feature, index) => (
-                    <li key={index} className="flex items-center group">
-                      <div className="w-9 h-9 rounded-full bg-primary-50 flex items-center justify-center mr-4 border border-primary-100 group-hover:bg-primary-500 group-hover:border-primary-500 transition-colors">
-                        <CheckLg size={18} className="text-primary-500 group-hover:text-white transition-colors" />
-                      </div>
-                      <span className="text-text font-medium group-hover:text-primary-600 transition-colors">
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  to="/contact"
-                  className="btn-primary w-full inline-flex items-center justify-center gap-2 group py-4 text-lg"
-                >
-                  Get Started
-                  <ArrowRight className="transform group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          </div>
+          <p className="mt-4 text-gray-500 font-light animate-pulse">Loading services...</p>
         </div>
       </section>
     );
   }
 
-  // ---- Services carousel view ----
-  return (
-    <section className="py-24 bg-surface relative overflow-hidden">
-      {/* Background Blur */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-50 rounded-full blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
+  // Error state
+  if (error) {
+    return (
+      <section className="min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <div className="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Unable to load services</h3>
+          <p className="text-gray-500">{error}</p>
+          <Link to="/" className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-[#72bf24] text-white font-medium rounded-lg hover:bg-[#62a71e] transition-colors">
+            Back to Home
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h5 className="uppercase tracking-[4px] text-primary-500 font-semibold text-sm mb-4">
-            SATESOFT SERVICES
-          </h5>
-          <h2 className="text-4xl md:text-5xl font-bold leading-tight text-text">
-            How Professional IT Services <br />
-            Can Drive <span className="text-primary-500">Success.</span>
+  // Empty state
+  if (!services.length) {
+    return (
+      <section className="min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <div className="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
+          <div className="text-5xl mb-4">📦</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">No services available</h3>
+          <p className="text-gray-500 font-light">Please check back later for our service offerings.</p>
+        </div>
+      </section>
+    );
+  }
+
+  const service = services[activeIndex];
+  const imageToShow = service.imageUrl || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500";
+  const fallbackImage = "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500";
+
+  return (
+    <section className="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+      {/* Background Decoration */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#72bf24]/5 rounded-full blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
+        
+        {/* ============================================================
+            HEADER
+            ============================================================ */}
+        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#72bf24]/10 border border-[#72bf24]/20 rounded-full text-[#72bf24] text-sm font-medium mb-4">
+            Our Services
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight">
+            Service to your reach <span className="font-semibold text-[#72bf24]">Our dear Customer.</span>
           </h2>
+          <p className="text-lg text-gray-500 font-light mt-4">
+            Explore our comprehensive range of technology solutions designed to transform your business.
+          </p>
         </div>
 
-        {/* Main Card */}
+        {/* ============================================================
+            MAIN CARDS
+            ============================================================ */}
         <div
           id="carousel-container"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className={`transition-opacity duration-1000 ease-in-out ${
+          className={`transition-opacity duration-500 ease-in-out ${
             fade ? "opacity-100" : "opacity-0"
           }`}
         >
-          <div className="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-shadow duration-500 p-8 md:p-12">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Content */}
+          <div className="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-shadow duration-500 p-6 md:p-10 lg:p-14 border border-gray-100">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+              
+              {/* LEFT - Content */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-primary-500 font-semibold">
-                    {String(activeIndex + 1).padStart(2, "0")} /{" "}
-                    {String(servicesData.length).padStart(2, "0")}
+                {/* Counter */}
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl font-bold text-[#72bf24]">
+                    {String(activeIndex + 1).padStart(2, "0")}
+                  </span>
+                  <div className="w-12 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[#72bf24] rounded-full transition-all duration-1000"
+                      style={{ width: `${((activeIndex + 1) / services.length) * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-sm text-gray-400 font-light">
+                    {String(services.length).padStart(2, "0")}
                   </span>
                 </div>
 
-                <h3 className="text-3xl md:text-4xl font-bold mb-5 text-text">
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-light text-gray-900 mb-4 leading-tight">
                   {service.title}
                 </h3>
 
-                <p className="text-text/70 text-lg leading-relaxed mb-8 min-h-[100px]">
+                <p className="text-gray-600 font-light leading-relaxed mb-6 min-h-[80px]">
                   {service.description}
                 </p>
 
                 {/* Trust Indicators */}
-                <div className="flex flex-wrap gap-4 text-sm text-text/60 mb-8">
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-500">✓</span> Reliable
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-500">✓</span> Scalable
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-500">✓</span> Secure
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-500">✓</span> Professional Support
-                  </span>
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {['Reliable', 'Scalable', 'Secure', '24/7 Support'].map((badge) => (
+                    <span key={badge} className="flex items-center gap-1.5 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                      <FaCheckCircle className="text-[#72bf24] text-xs" />
+                      {badge}
+                    </span>
+                  ))}
                 </div>
 
-                <button
-                  onClick={() => setDetail(service)}
-                  className="group inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-semibold rounded-full hover:bg-primary-600 hover:shadow-lg transition-all duration-300"
-                >
-                  Explore Service
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">
-                    →
-                  </span>
-                </button>
+                {/* CTA Buttons */}
+                <div className="flex flex-wrap gap-4">
+                  <Link
+                    to={`/services/${service.id}`}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#72bf24] text-white font-normal rounded-lg hover:bg-[#62a71e] transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group"
+                  >
+                    Explore Service
+                    <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                  <Link
+                    to="/contact"
+                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-[#72bf24] hover:text-[#72bf24] transition-all duration-300"
+                  >
+                    Contact Us
+                  </Link>
+                </div>
               </div>
 
-              {/* Image */}
-              <div className="overflow-hidden rounded-2xl h-[350px] bg-gray-100">
+              {/* RIGHT - Image */}
+              <div className="relative rounded-2xl overflow-hidden bg-gray-100 h-[280px] md:h-[320px] lg:h-[380px]">
                 <img
-                  src={imageToShow}
+                  src={imageError ? fallbackImage : imageToShow}
                   alt={service.title}
                   className={`w-full h-full object-cover transition-all duration-700 ${
                     imageLoaded ? "scale-100 opacity-100" : "scale-105 opacity-0"
-                  } hover:scale-105`}
+                  } hover:scale-105 transition-transform duration-700`}
                   onLoad={() => setImageLoaded(true)}
+                  onError={() => setImageError(true)}
                   loading="lazy"
                 />
+                {!imageLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <div className="w-10 h-10 border-4 border-[#72bf24] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex justify-center items-center gap-4 mt-10">
-          <button
-            onClick={prevCard}
-            aria-label="Previous Service"
-            className="w-12 h-12 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-primary-50 hover:border-primary-200 hover:shadow-md transition-all duration-300 flex items-center justify-center text-xl text-text/70 hover:text-primary-600"
-          >
-            ←
-          </button>
-
-          <button
-            onClick={nextCard}
-            aria-label="Next Service"
-            className="w-12 h-12 rounded-full bg-primary-500 text-white shadow-md hover:bg-primary-600 hover:shadow-lg transition-all duration-300 flex items-center justify-center text-xl"
-          >
-            →
-          </button>
-        </div>
-
-        {/* Indicators */}
-        <div className="flex justify-center gap-3 mt-8">
-          {servicesData.map((serviceItem, index) => (
+        {/* ============================================================
+            CONTROLS
+            ============================================================ */}
+        <div className="flex flex-col items-center gap-6 mt-10">
+          {/* Navigation Buttons */}
+          <div className="flex items-center gap-4">
             <button
-              key={serviceItem.id}
-              title={serviceItem.title}
-              onClick={() => changeCard(index)}
-              aria-label={`Go to ${serviceItem.title}`}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                activeIndex === index
-                  ? "w-12 bg-primary-500"
-                  : "w-3 bg-gray-300 hover:bg-gray-400"
-              }`}
-            />
-          ))}
+              onClick={prevCard}
+              aria-label="Previous Service"
+              className="w-12 h-12 rounded-full border border-gray-200 bg-white shadow-sm hover:bg-[#72bf24] hover:text-white hover:border-[#72bf24] hover:shadow-md transition-all duration-300 flex items-center justify-center text-gray-600 hover:text-white"
+            >
+              <FaChevronLeft className="text-sm" />
+            </button>
+
+            <button
+              onClick={nextCard}
+              aria-label="Next Service"
+              className="w-12 h-12 rounded-full bg-[#72bf24] text-white shadow-md hover:bg-[#62a71e] hover:shadow-lg transition-all duration-300 flex items-center justify-center"
+            >
+              <FaChevronRight className="text-sm" />
+            </button>
+          </div>
+
+          {/* Dot Indicators */}
+          <div className="flex items-center gap-2.5">
+            {services.map((serviceItem, index) => (
+              <button
+                key={serviceItem.id}
+                title={serviceItem.title}
+                onClick={() => changeCard(index)}
+                aria-label={`Go to ${serviceItem.title}`}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  activeIndex === index
+                    ? "w-10 bg-[#72bf24] shadow-md shadow-[#72bf24]/20"
+                    : "w-2.5 bg-gray-300 hover:bg-gray-400"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Slide Counter */}
+          <p className="text-sm text-gray-400 font-light">
+            {activeIndex + 1} of {services.length} services
+          </p>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default OurServices;

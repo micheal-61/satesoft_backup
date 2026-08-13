@@ -107,15 +107,25 @@ const initializeDatabase = async () => {
         CREATE TABLE IF NOT EXISTS admin_users (
           id INT AUTO_INCREMENT PRIMARY KEY,
           username VARCHAR(255) UNIQUE NOT NULL,
-          password VARCHAR(255) NOT NULL
+          password VARCHAR(255) NOT NULL,
+          email VARCHAR(255) DEFAULT NULL,
+          reset_token VARCHAR(255) DEFAULT NULL,
+          reset_token_expiry DATETIME DEFAULT NULL
         )
       `);
+      try {
+        await connection.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT NULL');
+        await connection.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255) DEFAULT NULL');
+        await connection.query('ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS reset_token_expiry DATETIME DEFAULT NULL');
+      } catch (e) {
+        console.error('Alter table admin_users error:', e.message);
+      }
       const [userRows] = await connection.query('SELECT COUNT(*) as count FROM admin_users');
       if (userRows[0].count === 0) {
         const hashedPassword = await bcrypt.hash('admin', 10);
         await connection.query(
-          'INSERT INTO admin_users (username, password) VALUES (?, ?)',
-          ['admin', hashedPassword]
+          'INSERT INTO admin_users (username, password, email) VALUES (?, ?, ?)',
+          ['admin', hashedPassword, 'admin@satesoft.com']
         );
         console.log('✅ Default admin created (username: admin, password: admin)');
       }
@@ -315,6 +325,111 @@ const initializeDatabase = async () => {
       console.error('Alter table news_posts content error:', e.message);
     }
 
+    // Service Agreements Table
+    await initTable('service_agreements', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS service_agreements (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          content TEXT DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `);
+    });
+
+    // Privacy Policies Table
+    await initTable('privacy_policies', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS privacy_policies (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          content TEXT DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `);
+    });
+
+    // Contacts Table
+    await initTable('contacts', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS contacts (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          placeholder_id VARCHAR(255) DEFAULT NULL,
+          contact_point VARCHAR(255) NOT NULL,
+          purpose_context TEXT DEFAULT NULL,
+          section VARCHAR(255) DEFAULT NULL,
+          category VARCHAR(100) DEFAULT 'general',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `);
+    });
+
+    // Jurisdictions Table
+    await initTable('jurisdictions', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS jurisdictions (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          code VARCHAR(10) DEFAULT NULL,
+          courts TEXT DEFAULT NULL,
+          laws TEXT DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `);
+    });
+
+    // Pricing Table
+    await initTable('pricing', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS pricing (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          plan VARCHAR(255) NOT NULL,
+          price DECIMAL(10,2) NOT NULL,
+          features TEXT DEFAULT NULL,
+          popular BOOLEAN DEFAULT FALSE,
+          display_order INT DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `);
+    });
+
+    // Service Cards Table
+    await initTable('service_cards', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS service_cards (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          subtitle VARCHAR(500) DEFAULT NULL,
+          description TEXT DEFAULT NULL,
+          summary TEXT DEFAULT NULL,
+          features JSON DEFAULT NULL,
+          image_url VARCHAR(1000) DEFAULT NULL,
+          display_order INT DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `);
+    });
+
+    const [existingServices] = await connection.query('SELECT COUNT(*) as count FROM service_cards');
+    if (existingServices[0].count === 0) {
+      await connection.query(`
+        INSERT INTO service_cards (title, subtitle, description, summary, features, image_url, display_order) VALUES
+        ('Cyber Security', 'Your Digital Shield', 'We protect your business with advanced cybersecurity solutions tailored to African market challenges. Our security protocols are designed to safeguard your data, infrastructure, and reputation.', 'Stay safe in a connected world. We deliver security that fits African business realities — from threat detection to incident response.', '["Threat detection & response", "Network security monitoring", "Data encryption & compliance", "Security awareness training"]', '/assets/images/african_tech_meeting_1783002294603.png', 1),
+        ('UI/UX Design', 'Design That Speaks', 'We create intuitive, user-centered designs that resonate with African users. Our design process combines global best practices with local cultural insights.', 'Design that feels natural. We build interfaces that work for real people — simple, inclusive, and culturally aware.', '["User research & testing", "Responsive interface design", "Design system creation", "Accessibility-first approach"]', '/assets/images/african_tech_woman_3_1783002839334.png', 2),
+        ('App Development', 'Build For Scale', 'We build robust mobile and web applications that scale. From MVP to enterprise-grade platforms, our engineering teams deliver reliable software.', 'Software that grows with you. We engineer apps that remain fast, stable, and maintainable as your user base expands.', '["Cross-platform development", "API-first architecture", "Performance optimization", "Ongoing maintenance & support"]', '/assets/images/african_tech_team_hero_1783002251745.png', 3),
+        ('Technology Consult', 'Strategic Guidance', 'We help organizations make smarter technology decisions. From digital transformation roadmaps to vendor evaluation, our consultants bring practical expertise.', 'Make the right tech bets. We cut through hype to help you choose solutions that actually move the needle.', '["Digital strategy & roadmap", "Technology assessment", "Vendor selection support", "Change management guidance"]', '/assets/images/african_developer_laptop_1783002306037.png', 4),
+        ('IT Solution', 'End-to-End Support', 'We deliver comprehensive IT solutions — from infrastructure setup to managed services. Our solutions are built for reliability and cost-efficiency.', 'One partner, full coverage. We handle the heavy lifting so you can focus on running your business.', '["Infrastructure design & deployment", "Cloud migration & management", "Managed IT services", "24/7 technical support"]', '/assets/images/african_tech_board_1_1783002554188.png', 5)
+      ON DUPLICATE KEY UPDATE title = VALUES(title)
+      `);
+      console.log('✅ Service cards seeded');
+    }
+
     console.log('✅ Database initialization complete');
   } catch (error) {
     console.error('❌ Database initialization error:', error);
@@ -362,6 +477,20 @@ const verifyStoredPassword = async (inputPassword, storedPassword) => {
   }
 
   return storedPassword === inputPassword;
+};
+
+const normalizeImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('/assets/')) return trimmed;
+  const normalized = trimmed.replace(/\\/g, '/');
+  const match = normalized.match(/\/assets\/images\/.+$/);
+  if (match) return match[0];
+  const filename = normalized.split('/').pop();
+  if (filename) return '/assets/images/' + filename;
+  return null;
 };
 
 // ======================
@@ -436,6 +565,111 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Login Error:', error);
+    res.status(500).json({
+      error: 'Internal server error.',
+    });
+  }
+});
+
+// Forgot Password - Generate Reset Token
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        error: 'Email is required.',
+      });
+    }
+
+    const [users] = await pool.query(
+      'SELECT * FROM admin_users WHERE email = ?',
+      [email]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        error: 'No account found with that email address.',
+      });
+    }
+
+    const resetToken = jwt.sign(
+      { id: users[0].id, username: users[0].username },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    const tokenExpiry = new Date(Date.now() + 3600000);
+
+    await pool.query(
+      'UPDATE admin_users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?',
+      [resetToken, tokenExpiry, users[0].id]
+    );
+
+    console.log(`🔑 Password reset token for ${email}: ${resetToken}`);
+
+    res.json({
+      message: 'If an account exists, reset instructions have been sent to your email.',
+      email: users[0].email,
+    });
+  } catch (error) {
+    console.error('❌ Forgot Password Error:', error);
+    res.status(500).json({
+      error: 'Internal server error.',
+    });
+  }
+});
+
+// Reset Password with Token
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        error: 'Token and new password are required.',
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({
+        error: 'Invalid or expired reset token.',
+      });
+    }
+
+    const [users] = await pool.query(
+      'SELECT * FROM admin_users WHERE id = ? AND reset_token = ?',
+      [decoded.id, token]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({
+        error: 'Invalid reset token.',
+      });
+    }
+
+    const user = users[0];
+    if (new Date() > new Date(user.reset_token_expiry)) {
+      return res.status(400).json({
+        error: 'Reset token has expired.',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      'UPDATE admin_users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?',
+      [hashedPassword, user.id]
+    );
+
+    res.json({
+      message: 'Password reset successfully.',
+    });
+  } catch (error) {
+    console.error('❌ Reset Password Error:', error);
     res.status(500).json({
       error: 'Internal server error.',
     });
@@ -696,7 +930,7 @@ app.post('/api/products', async (req, res) => {
         tagline,
         category || null,
         iconType || 'trending',
-        logoUrl || null,
+        normalizeImageUrl(logoUrl),
         description || null,
         keyFeatures && Array.isArray(keyFeatures) ? JSON.stringify(keyFeatures) : JSON.stringify([]),
       ]
@@ -737,7 +971,7 @@ app.put('/api/products/:id', async (req, res) => {
         tagline,
         category || null,
         iconType || 'trending',
-        logoUrl || null,
+        normalizeImageUrl(logoUrl),
         description || null,
         keyFeatures && Array.isArray(keyFeatures) ? JSON.stringify(keyFeatures) : JSON.stringify([]),
         id,
@@ -768,6 +1002,148 @@ app.delete('/api/products/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Delete Product Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ======================
+// SERVICE ENDPOINTS
+// ======================
+
+// List Services
+app.get('/api/services', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM service_cards ORDER BY display_order, id');
+    const services = rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      description: row.description,
+      summary: row.summary,
+      features: row.features ? JSON.parse(row.features) : [],
+      imageUrl: row.image_url,
+      displayOrder: row.display_order,
+    }));
+    res.json(services);
+  } catch (error) {
+    console.error('❌ List Services Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Get Service by ID
+app.get('/api/services/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM service_cards WHERE id = ?', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Service not found.' });
+    }
+
+    const row = rows[0];
+    res.json({
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      description: row.description,
+      summary: row.summary,
+      features: row.features ? JSON.parse(row.features) : [],
+      imageUrl: row.image_url,
+      displayOrder: row.display_order,
+    });
+  } catch (error) {
+    console.error('❌ Get Service Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Add Service
+app.post('/api/services', async (req, res) => {
+  try {
+    const { title, subtitle, description, summary, features, imageUrl, displayOrder } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required.' });
+    }
+
+    const [result] = await pool.query(
+      'INSERT INTO service_cards (title, subtitle, description, summary, features, image_url, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        title,
+        subtitle || null,
+        description || null,
+        summary || null,
+        features && Array.isArray(features) ? JSON.stringify(features) : JSON.stringify([]),
+        normalizeImageUrl(imageUrl),
+        displayOrder || 0,
+      ]
+    );
+
+    res.status(201).json({
+      id: result.insertId,
+      title,
+      subtitle: subtitle || null,
+      description: description || null,
+      summary: summary || null,
+      features: features || [],
+      imageUrl: imageUrl || null,
+      displayOrder: displayOrder || 0,
+    });
+  } catch (error) {
+    console.error('❌ Add Service Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Update Service
+app.put('/api/services/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, subtitle, description, summary, features, imageUrl, displayOrder } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required.' });
+    }
+
+    await pool.query(
+      'UPDATE service_cards SET title = ?, subtitle = ?, description = ?, summary = ?, features = ?, image_url = ?, display_order = ? WHERE id = ?',
+      [
+        title,
+        subtitle || null,
+        description || null,
+        summary || null,
+        features && Array.isArray(features) ? JSON.stringify(features) : JSON.stringify([]),
+        normalizeImageUrl(imageUrl),
+        displayOrder || 0,
+        id,
+      ]
+    );
+
+    res.json({
+      id: Number(id),
+      title,
+      subtitle: subtitle || null,
+      description: description || null,
+      summary: summary || null,
+      features: features || [],
+      imageUrl: imageUrl || null,
+      displayOrder: displayOrder || 0,
+    });
+  } catch (error) {
+    console.error('❌ Update Service Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Delete Service
+app.delete('/api/services/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM service_cards WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete Service Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -896,20 +1272,24 @@ app.put('/api/partners/:id/terminate', async (req, res) => {
 
 app.get('/api/advisors', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM advisors ORDER BY advisor_order, id');
-    res.json(rows.map((row) => ({
-      id: row.id,
-      firstName: row.first_name,
-      lastName: row.last_name,
-      roleId: row.role_id,
-      order: row.advisor_order,
-      isActive: row.is_active === 1,
-      imageUrl: row.image_url || null,
-      profileLink: row.profile_link || null,
-      bio: row.bio,
-      email: row.email,
-      expertise: row.expertise,
-    })));
+      const [rows] = await pool.query('SELECT * FROM advisors ORDER BY advisor_order, id');
+    res.json(rows.map((row) => {
+      const isActiveRaw = row.is_active;
+      const isActive = Buffer.isBuffer(isActiveRaw) ? isActiveRaw[0] === 1 : Number(isActiveRaw) === 1;
+      return {
+        id: row.id,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        roleId: row.role_id,
+        order: row.advisor_order,
+        isActive,
+        imageUrl: row.image_url || null,
+        profileLink: row.profile_link || null,
+        bio: row.bio,
+        email: row.email,
+        expertise: row.expertise,
+      };
+    }));
   } catch (error) {
     console.error('❌ List Advisors Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -926,7 +1306,7 @@ app.post('/api/advisors', async (req, res) => {
 
     const [result] = await pool.query(
       'INSERT INTO advisors (first_name, last_name, role_id, advisor_order, is_active, image_url, profile_link, bio, email, expertise) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [firstName, lastName || null, roleId || 0, advisorOrder || 0, isActive ? 1 : 1, imageUrl || null, profileLink || null, bio || null, email || null, expertise || null]
+      [firstName, lastName || null, roleId || 0, advisorOrder || 0, isActive ? 1 : 1, normalizeImageUrl(imageUrl), profileLink || null, bio || null, email || null, expertise || null]
     );
 
     res.status(201).json({ 
@@ -959,7 +1339,7 @@ app.put('/api/advisors/:id', async (req, res) => {
 
     await pool.query(
       'UPDATE advisors SET first_name = ?, last_name = ?, role_id = ?, advisor_order = ?, is_active = ?, image_url = ?, profile_link = ?, bio = ?, email = ?, expertise = ? WHERE id = ?',
-      [firstName, lastName || null, roleId || 0, advisorOrder || 0, isActive ? 1 : 0, imageUrl || null, profileLink || null, bio || null, email || null, expertise || null, id]
+      [firstName, lastName || null, roleId || 0, advisorOrder || 0, isActive ? 1 : 0, normalizeImageUrl(imageUrl), profileLink || null, bio || null, email || null, expertise || null, id]
     );
 
     res.json({ 
@@ -1078,6 +1458,386 @@ app.delete('/api/news/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Delete News Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ======================
+// SERVICE AGREEMENTS ENDPOINTS
+// ======================
+
+app.get('/api/service-agreements', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM service_agreements ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ List Service Agreements Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.get('/api/service-agreements/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM service_agreements WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Service agreement not found.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Get Service Agreement Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/service-agreements', async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required.' });
+    }
+    const [result] = await pool.query(
+      'INSERT INTO service_agreements (title, content) VALUES (?, ?)',
+      [title, content || null]
+    );
+    const [newAgreement] = await pool.query('SELECT * FROM service_agreements WHERE id = ?', [result.insertId]);
+    res.status(201).json(newAgreement[0]);
+  } catch (error) {
+    console.error('❌ Create Service Agreement Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.put('/api/service-agreements/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required.' });
+    }
+    await pool.query(
+      'UPDATE service_agreements SET title = ?, content = ? WHERE id = ?',
+      [title, content || null, id]
+    );
+    const [updated] = await pool.query('SELECT * FROM service_agreements WHERE id = ?', [id]);
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('❌ Update Service Agreement Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.delete('/api/service-agreements/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM service_agreements WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete Service Agreement Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ======================
+// PRICING ENDPOINTS
+// ======================
+
+app.get('/api/pricing', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM pricing ORDER BY display_order ASC, id ASC');
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ List Pricing Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.get('/api/pricing/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM pricing WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Pricing plan not found.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Get Pricing Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/pricing', async (req, res) => {
+  try {
+    const { plan, price, features, popular, display_order } = req.body;
+    if (!plan || price === undefined) {
+      return res.status(400).json({ error: 'Plan and price are required.' });
+    }
+    const [result] = await pool.query(
+      'INSERT INTO pricing (plan, price, features, popular, display_order) VALUES (?, ?, ?, ?, ?)',
+      [plan, price, features || null, popular ? 1 : 0, display_order || 0]
+    );
+    const [newPricing] = await pool.query('SELECT * FROM pricing WHERE id = ?', [result.insertId]);
+    res.status(201).json(newPricing[0]);
+  } catch (error) {
+    console.error('❌ Create Pricing Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.put('/api/pricing/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { plan, price, features, popular, display_order } = req.body;
+    if (!plan || price === undefined) {
+      return res.status(400).json({ error: 'Plan and price are required.' });
+    }
+    await pool.query(
+      'UPDATE pricing SET plan = ?, price = ?, features = ?, popular = ?, display_order = ? WHERE id = ?',
+      [plan, price, features || null, popular ? 1 : 0, display_order || 0, id]
+    );
+    const [updated] = await pool.query('SELECT * FROM pricing WHERE id = ?', [id]);
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('❌ Update Pricing Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.delete('/api/pricing/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM pricing WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete Pricing Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ======================
+// PRIVACY POLICIES ENDPOINTS
+// ======================
+
+app.get('/api/privacy-policies', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM privacy_policies ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ List Privacy Policies Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.get('/api/privacy-policies/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM privacy_policies WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Privacy policy not found.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Get Privacy Policy Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/privacy-policies', async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required.' });
+    }
+    const [result] = await pool.query(
+      'INSERT INTO privacy_policies (title, content) VALUES (?, ?)',
+      [title, content || null]
+    );
+    const [newPolicy] = await pool.query('SELECT * FROM privacy_policies WHERE id = ?', [result.insertId]);
+    res.status(201).json(newPolicy[0]);
+  } catch (error) {
+    console.error('❌ Create Privacy Policy Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.put('/api/privacy-policies/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required.' });
+    }
+    await pool.query(
+      'UPDATE privacy_policies SET title = ?, content = ? WHERE id = ?',
+      [title, content || null, id]
+    );
+    const [updated] = await pool.query('SELECT * FROM privacy_policies WHERE id = ?', [id]);
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('❌ Update Privacy Policy Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.delete('/api/privacy-policies/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM privacy_policies WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete Privacy Policy Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ======================
+// CONTACTS ENDPOINTS
+// ======================
+
+app.get('/api/contacts', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM contacts ORDER BY id');
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ List Contacts Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.get('/api/contacts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM contacts WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Contact not found.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Get Contact Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/contacts', async (req, res) => {
+  try {
+    const { placeholder_id, contact_point, purpose_context, section, category } = req.body;
+    if (!contact_point) {
+      return res.status(400).json({ error: 'Contact point is required.' });
+    }
+    const [result] = await pool.query(
+      'INSERT INTO contacts (placeholder_id, contact_point, purpose_context, section, category) VALUES (?, ?, ?, ?, ?)',
+      [placeholder_id || null, contact_point, purpose_context || null, section || null, category || 'general']
+    );
+    const [newContact] = await pool.query('SELECT * FROM contacts WHERE id = ?', [result.insertId]);
+    res.status(201).json(newContact[0]);
+  } catch (error) {
+    console.error('❌ Create Contact Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.put('/api/contacts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { placeholder_id, contact_point, purpose_context, section, category } = req.body;
+    if (!contact_point) {
+      return res.status(400).json({ error: 'Contact point is required.' });
+    }
+    await pool.query(
+      'UPDATE contacts SET placeholder_id = ?, contact_point = ?, purpose_context = ?, section = ?, category = ? WHERE id = ?',
+      [placeholder_id || null, contact_point, purpose_context || null, section || null, category || 'general', id]
+    );
+    const [updated] = await pool.query('SELECT * FROM contacts WHERE id = ?', [id]);
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('❌ Update Contact Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.delete('/api/contacts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM contacts WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete Contact Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ======================
+// JURISDICTIONS ENDPOINTS
+// ======================
+
+app.get('/api/jurisdictions', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM jurisdictions ORDER BY id');
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ List Jurisdictions Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.get('/api/jurisdictions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM jurisdictions WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Jurisdiction not found.' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Get Jurisdiction Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/jurisdictions', async (req, res) => {
+  try {
+    const { name, code, courts, laws } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required.' });
+    }
+    const [result] = await pool.query(
+      'INSERT INTO jurisdictions (name, code, courts, laws) VALUES (?, ?, ?, ?)',
+      [name, code || null, courts || null, laws || null]
+    );
+    const [newJurisdiction] = await pool.query('SELECT * FROM jurisdictions WHERE id = ?', [result.insertId]);
+    res.status(201).json(newJurisdiction[0]);
+  } catch (error) {
+    console.error('❌ Create Jurisdiction Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.put('/api/jurisdictions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, code, courts, laws } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required.' });
+    }
+    await pool.query(
+      'UPDATE jurisdictions SET name = ?, code = ?, courts = ?, laws = ? WHERE id = ?',
+      [name, code || null, courts || null, laws || null, id]
+    );
+    const [updated] = await pool.query('SELECT * FROM jurisdictions WHERE id = ?', [id]);
+    res.json(updated[0]);
+  } catch (error) {
+    console.error('❌ Update Jurisdiction Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.delete('/api/jurisdictions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM jurisdictions WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Delete Jurisdiction Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });

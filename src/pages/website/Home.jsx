@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Hero from "./Hero";
+import HomeProducts from "./HomeProducts";
 
 const africanImages = [
   "/assets/images/african_tech_woman_3_1783002839334.png",
@@ -11,6 +12,7 @@ const africanImages = [
 
 const Home = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,84 +21,88 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      alert(`Searching for: ${searchQuery}`);
+    }
+  };
+
   return (
     <div>
+      {/* WELCOME BANNER */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-primary-50/80 via-white to-white border-b border-primary-100">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/2 -left-24 w-72 h-72 bg-primary-100/40 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative container mx-auto px-8 sm:px-12 lg:px-20 pt-20 pb-20 md:pt-28 md:pb-28">
+              <div className="max-w-3xl mx-auto text-center">
+                {/* Welcome Message */}
+                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-primary-200 rounded-full text-primary-700 text-sm font-medium mb-10 shadow-sm">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-500"></span>
+                  </span>
+                  We're online and ready to help
+                </div>
+
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-text mb-6 leading-tight border-t-2 border-primary-500 pt-10">
+                  Hi, Welcome to <span className="text-lime-400">Satesoft</span>
+                </h1>
+
+                <p className="text-xl md:text-2xl text-text/70 mb-12 max-w-2xl mx-auto leading-relaxed">
+                  Have question in mind?
+                </p>
+
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                      <i className="bi bi-search text-text/40 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                    </div>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search for solutions, services, or information..."
+                      className="w-full pl-16 pr-40 py-5 bg-white border-2 border-gray-200 rounded-2xl text-text placeholder-text/40 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-300 shadow-sm hover:shadow-md text-base"
+                    />
+                    <button
+                      type="submit"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 px-7 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </form>
+
+                {/* Quick Links */}
+                <div className="flex flex-wrap items-center justify-center gap-3 mt-10">
+              <span className="text-xs text-text/50 font-medium">Popular:</span>
+              {["Cloud Solutions", "Data Analytics", "Consulting", "Support"].map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSearchQuery(tag)}
+                  className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-medium text-text/70 hover:text-primary-600 hover:border-primary-300 hover:shadow-sm transition-all duration-200"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* HERO SECTION */}
       <Hero />
 
-      {/* HOME INFORMATION SECTION */}
-      <section id="home" className="py-20 bg-bg">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col-reverse lg:flex-row items-center gap-16">
-            
-            {/* LEFT CONTENT */}
-            <div className="w-full lg:w-1/2">
-              <div className="mb-6">
-                <Link to="/about" className="inline-block px-4 py-2 bg-white shadow-[0_4px_15px_-3px_rgba(61,158,65,0.4)] rounded-lg uppercase tracking-[0.2em] text-primary-600 font-bold text-xs border-y border-primary-100 border-x-4 border-x-primary-500 hover:scale-105 transition-all duration-300">
-                  Empowering Africa's Digital Future
-                </Link>
-              </div>
+      {/* PRODUCTS SECTION */}
+      <HomeProducts />
+     </div>
+   );
+ };
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-primary-500 leading-[1.3] mb-6 break-words">
-                African Solutions.
-              </h1>
-
-              <h2 className="text-2xl md:text-3xl font-semibold text-text leading-snug mb-6">
-                Meaningful Data.
-              </h2>
-
-              <p className="text-lg text-text/70 leading-relaxed mb-8">
-                Satesoft develops innovative digital solutions that transform
-                organizations through intelligent software, cloud technologies,
-                and actionable data. Our mission is to empower businesses,
-                governments, and communities across Africa with technology that
-                drives sustainable growth.
-              </p>
-
-              {/* ACTION BUTTONS */}
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  to="/products"
-                  className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-lg shadow-md hover:bg-primary-600 transition duration-300"
-                >
-                  Explore Products →
-                </Link>
-
-                <Link
-                  to="/about"
-                  className="px-6 py-3 border-2 border-primary-500 text-primary-500 font-semibold rounded-lg hover:bg-primary-500 hover:text-white transition duration-300"
-                >
-                  Learn More
-                </Link>
-              </div>
-            </div>
-
-            {/* RIGHT IMAGE */}
-            <div className="w-full lg:w-1/2">
-                <div className="relative group overflow-hidden rounded-3xl">
-                  {/* Glow Effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-primary-300 opacity-20 blur-xl group-hover:opacity-40 transition duration-500"></div>
-
-                  <div className="relative w-full rounded-3xl shadow-2xl object-cover aspect-video">
-                    {africanImages.map((src, index) => (
-                      <img
-                        key={index}
-                        src={src}
-                        alt={`Satesoft African Solutions ${index + 1}`}
-                        className={`absolute inset-0 w-full h-full rounded-3xl object-cover transform transition-opacity duration-1000 ${
-                          index === currentImageIndex ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-};
-
-export default Home;
+ export default Home;

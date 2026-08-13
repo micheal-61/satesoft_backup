@@ -1,121 +1,346 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-
-const dummyAdvisors = [
-  {
-    id: 1,
-    firstName: "Dr. Adebayo",
-    lastName: "Ogunlesi",
-    role: { roleName: "CHAIRMAN" },
-    bio: "Former tech executive with 20+ years of experience scaling digital infrastructure across emerging markets.",
-    profileLink: "#",
-    image: "/assets/images/african_tech_board_1_1783002554188.png"
-  },
-  {
-    id: 2,
-    firstName: "Sarah",
-    lastName: "Ndiaye",
-    role: { roleName: "TECH ADVISOR" },
-    bio: "Pioneer in African fintech, advising on blockchain adoption and secure payment gateways.",
-    profileLink: "#",
-    image: "/assets/images/african_tech_board_2_1783002564170.png"
-  },
-  {
-    id: 3,
-    firstName: "Michael",
-    lastName: "Chen",
-    role: { roleName: "STRATEGY LEAD" },
-    bio: "Global strategist specializing in data analytics and enterprise software growth.",
-    profileLink: "#",
-    image: "/assets/images/african_tech_board_3_1783002610416.png"
-  },
-  {
-    id: 4,
-    firstName: "Amina",
-    lastName: "Mohammed",
-    role: { roleName: "LEGAL & COMPLIANCE" },
-    bio: "Expert in international tech law, ensuring Satesoft's products meet global regulatory standards.",
-    profileLink: "#",
-    image: "/assets/images/african_tech_board_4_1783002620680.png"
-  }
-];
+import { 
+  FaArrowLeft, FaSearch, FaEnvelope, FaLinkedin, FaTwitter, 
+  FaUser, FaBriefcase, FaAward, FaUsers, FaChevronRight
+} from "react-icons/fa";
 
 const Board = () => {
+  const [advisors, setAdvisors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState("All");
 
-  const filteredAdvisors = dummyAdvisors.filter(adv => 
-    `${adv.firstName} ${adv.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    adv.role.roleName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchAdvisors = async () => {
+      try {
+        const response = await fetch('/api/advisors');
+        if (!response.ok) throw new Error('Failed to fetch advisors');
+        const data = await response.json();
+        setAdvisors(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAdvisors();
+  }, []);
+
+  const getRoleName = (roleId) => {
+    const roles = {
+      1: 'Board Member',
+      2: 'Advisor',
+      3: 'Executive',
+      4: 'Investor',
+    };
+    return roles[roleId] || 'Advisor';
+  };
+
+  // Get unique roles for filter
+  const roles = useMemo(() => {
+    const roleSet = new Set(advisors.map(a => getRoleName(a.roleId)));
+    return ['All', ...roleSet];
+  }, [advisors]);
+
+  const getRoleColor = (roleId) => {
+    const colors = {
+      1: 'bg-[#72bf24]/10 text-[#72bf24] border-[#72bf24]/20',
+      2: 'bg-blue-50 text-blue-600 border-blue-200',
+      3: 'bg-purple-50 text-purple-600 border-purple-200',
+      4: 'bg-orange-50 text-orange-600 border-orange-200',
+    };
+    return colors[roleId] || 'bg-gray-50 text-gray-600 border-gray-200';
+  };
+
+  const filteredAdvisors = advisors.filter(adv => {
+    const fullName = `${adv.firstName || ''} ${adv.lastName || ''}`.trim().toLowerCase();
+    const roleName = getRoleName(adv.roleId).toLowerCase();
+    const query = searchQuery.toLowerCase();
+    const matchesSearch = !searchQuery || 
+      fullName.includes(query) ||
+      roleName.includes(query) ||
+      (adv.bio && adv.bio.toLowerCase().includes(query)) ||
+      (adv.expertise && adv.expertise.toLowerCase().includes(query));
+    
+    const matchesRole = filterRole === "All" || getRoleName(adv.roleId) === filterRole;
+    
+    return adv.isActive !== false && matchesSearch && matchesRole;
+  });
+
+  if (loading) {
+    return (
+      <section className="min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto">
+            <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-[#72bf24] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="mt-4 text-gray-500 font-light animate-pulse">Loading board members...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="min-h-[80vh] flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <div className="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Unable to load team</h3>
+          <p className="text-gray-500">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-6 py-2 bg-[#72bf24] text-white rounded-lg hover:bg-[#62a71e] transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="min-h-screen bg-bg py-20 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 relative z-10">
+    <section className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-16 md:py-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-16 pb-8 border-b border-border gap-8">
+        {/* ============================================================
+            HERO HEADER
+            ============================================================ */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-12 pb-8 border-b border-gray-200 gap-6">
           <div className="lg:w-2/3">
-            <a href="/" className="inline-flex items-center text-text/60 hover:text-primary-600 font-bold text-xs tracking-widest uppercase mb-8 transition-colors">
-              <svg className="mr-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-              BACK TO HOME
-            </a>
-            <div className="mb-6">
-              <Link to="/board" className="inline-block px-4 py-2 bg-white shadow-[0_4px_15px_-3px_rgba(61,158,65,0.4)] rounded-lg uppercase tracking-[0.2em] text-primary-600 font-bold text-xs border-y border-primary-100 border-x-4 border-x-primary-500 hover:scale-105 transition-all duration-300">
+            <Link 
+              to="/" 
+              className="inline-flex items-center gap-2 text-gray-400 hover:text-[#72bf24] font-medium text-sm transition-colors mb-6 group"
+            >
+              <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+              Back to Home
+            </Link>
+            
+            <div className="mb-4">
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#72bf24]/10 border border-[#72bf24]/20 rounded-full text-[#72bf24] text-sm font-medium">
+                <FaUsers className="text-[#72bf24]" />
                 Leadership
-              </Link>
+              </span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text mb-6 tracking-tight">
-              Board of Advisors
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 mb-4 tracking-tight">
+              Board of <span className="font-semibold text-[#72bf24]">Advisors</span>
             </h1>
-            <p className="text-text/70 text-lg md:text-xl max-w-3xl">
-              A specialized assembly of distinguished leaders and innovators providing strategic guidance to drive Satesoft's technological excellence.
+            
+            <p className="text-lg text-gray-600 font-light max-w-3xl leading-relaxed">
+              A specialized assembly of distinguished leaders and innovators providing 
+              strategic guidance to drive Satesoft's technological excellence.
             </p>
           </div>
-          <div className="lg:w-1/3">
+          
+          <div className="lg:w-1/3 w-full">
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search board members..."
+                placeholder="Search by name, role, or expertise..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-6 pr-12 py-4 bg-surface border border-border rounded-full text-text placeholder-text/40 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                className="w-full pl-12 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-gray-700 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#72bf24] focus:border-transparent transition-all"
+                aria-label="Search board members"
               />
-              <svg className="absolute right-6 top-1/2 -translate-y-1/2 text-text/40 w-5 h-5 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
-          {filteredAdvisors.map((advisor, index) => (
-            <div className="bg-surface rounded-3xl shadow-sm border border-border overflow-hidden flex flex-col sm:flex-row group hover:shadow-xl transition-all duration-300 hover:-translate-y-1" key={advisor.id}>
-              <div className="sm:w-2/5 h-64 sm:h-auto relative overflow-hidden flex-shrink-0">
-                <img src={advisor.image} alt={`${advisor.firstName} ${advisor.lastName}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-black/10"></div>
-              </div>
-              <div className="p-8 flex flex-col flex-1">
-                <div className="inline-flex self-start px-3 py-1 bg-primary-50 text-primary-600 rounded-full text-xs font-bold tracking-widest uppercase mb-4 border border-primary-100">
-                  {advisor.role?.roleName || "ADVISOR"}
-                </div>
-                <h3 className="text-2xl font-bold text-text mb-4">{advisor.firstName} {advisor.lastName}</h3>
-                <p className="text-text/70 text-sm leading-relaxed mb-6 flex-1">{advisor.bio}</p>
-                
-                {advisor.profileLink && (
-                  <div className="mt-auto pt-4 border-t border-border">
-                    <a href={advisor.profileLink} className="inline-flex items-center text-primary-600 font-bold hover:text-primary-700 transition-colors group/link">
-                      Full Profile 
-                      <svg className="ml-2 w-4 h-4 group-hover/link:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* ============================================================
+            FILTERS
+            ============================================================ */}
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          <span className="text-sm text-gray-500 font-medium mr-2">Filter by:</span>
+          {roles.map((role) => (
+            <button
+              key={role}
+              onClick={() => setFilterRole(role)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                filterRole === role
+                  ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-[#72bf24]/30 hover:text-[#72bf24]'
+              }`}
+            >
+              {role}
+            </button>
           ))}
-          {filteredAdvisors.length === 0 && (
-            <div className="col-span-1 lg:col-span-2 text-center text-text/50 py-16 bg-surface rounded-3xl border border-dashed border-border">
-              <h5 className="text-xl font-medium">No board members found matching your search.</h5>
-            </div>
-          )}
         </div>
 
+        {/* ============================================================
+            MEMBERS GRID
+            ============================================================ */}
+        {filteredAdvisors.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {filteredAdvisors.map((advisor, index) => {
+              const fullName = `${advisor.firstName || ''} ${advisor.lastName || ''}`.trim();
+              const roleName = getRoleName(advisor.roleId);
+              const roleColor = getRoleColor(advisor.roleId);
+              
+              return (
+                <div 
+                  key={advisor.id} 
+                  className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col sm:flex-row hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  {/* Image */}
+                  <div className="sm:w-2/5 h-64 sm:h-auto relative overflow-hidden flex-shrink-0 bg-gray-100">
+                    {advisor.imageUrl ? (
+                      <img 
+                        src={advisor.imageUrl} 
+                        alt={fullName} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#72bf24]/10 to-[#72bf24]/5 flex items-center justify-center">
+                        <FaUser className="text-6xl text-[#72bf24]/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-transparent to-transparent sm:bg-gradient-to-r sm:from-transparent sm:via-transparent sm:to-gray-900/10"></div>
+                    
+                    {/* Role Badge */}
+                    <div className={`absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${roleColor} backdrop-blur-sm`}>
+                      <FaBriefcase className="text-xs" />
+                      {roleName}
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-6 flex flex-col flex-1">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                      {fullName}
+                    </h3>
+                    
+                    {advisor.expertise && (
+                      <p className="text-sm text-[#72bf24] font-medium mb-3">
+                        {advisor.expertise}
+                      </p>
+                    )}
+                    
+                    {advisor.bio && (
+                      <p className="text-sm text-gray-600 leading-relaxed flex-1 line-clamp-3">
+                        {advisor.bio}
+                      </p>
+                    )}
+                    
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {advisor.email && (
+                          <a 
+                            href={`mailto:${advisor.email}`} 
+                            className="text-gray-400 hover:text-[#72bf24] transition-colors"
+                            aria-label={`Email ${fullName}`}
+                          >
+                            <FaEnvelope className="text-sm" />
+                          </a>
+                        )}
+                        {advisor.linkedin && (
+                          <a 
+                            href={advisor.linkedin} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-400 hover:text-[#0A66C2] transition-colors"
+                            aria-label={`${fullName} on LinkedIn`}
+                          >
+                            <FaLinkedin className="text-sm" />
+                          </a>
+                        )}
+                        {advisor.twitter && (
+                          <a 
+                            href={advisor.twitter} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-400 hover:text-[#1DA1F2] transition-colors"
+                            aria-label={`${fullName} on Twitter`}
+                          >
+                            <FaTwitter className="text-sm" />
+                          </a>
+                        )}
+                      </div>
+                      
+                      {advisor.profileLink && (
+                        <a 
+                          href={advisor.profileLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-[#72bf24] hover:text-[#62a71e] transition-colors group/link"
+                        >
+                          Full Profile
+                          <FaChevronRight className="text-xs group-hover/link:translate-x-1 transition-transform" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="col-span-2 text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-200">
+            <div className="text-5xl mb-4">🔍</div>
+            <h3 className="text-xl font-medium text-gray-700 mb-2">No members found</h3>
+            <p className="text-gray-400 font-light">
+              Try adjusting your search or filter to find what you're looking for.
+            </p>
+            <button
+              onClick={() => { setSearchQuery(""); setFilterRole("All"); }}
+              className="mt-4 text-[#72bf24] hover:text-[#62a71e] font-medium transition-colors"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
+
+        {/* ============================================================
+            STATS / CALL TO ACTION
+            ============================================================ */}
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
+            <div className="text-3xl font-bold text-[#72bf24]">{advisors.length}</div>
+            <div className="text-sm text-gray-500 mt-1">Total Members</div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
+            <div className="text-3xl font-bold text-[#72bf24]">
+              {advisors.filter(a => getRoleName(a.roleId) === 'Board Member').length}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">Board Members</div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
+            <div className="text-3xl font-bold text-[#72bf24]">
+              {advisors.filter(a => getRoleName(a.roleId) === 'Advisor').length}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">Advisors</div>
+          </div>
+        </div>
+
+        {/* ============================================================
+            CTA SECTION
+            ============================================================ */}
+        <div className="mt-12 p-8 bg-gradient-to-br from-[#72bf24]/5 to-white rounded-2xl border border-[#72bf24]/10 text-center">
+          <h3 className="text-lg font-semibold text-gray-800">Interested in joining our advisory board?</h3>
+          <p className="text-gray-500 font-light mt-1">
+            We're always looking for visionary leaders to guide our mission.
+          </p>
+          <Link
+            to="/contact"
+            className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-[#72bf24] text-white font-medium rounded-lg hover:bg-[#62a71e] transition-all duration-300 hover:shadow-lg"
+          >
+            Get in Touch
+            <FaChevronRight className="text-sm" />
+          </Link>
+        </div>
+        
       </div>
     </section>
   );

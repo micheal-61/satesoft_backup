@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+import Logo from "./Logo";
 
 export default function Appheader() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,87 +36,202 @@ export default function Appheader() {
     setMobileOpen((prev) => !prev);
   };
 
+  // Navigation links configuration
+  const navLinks = [
+    { label: 'Home', path: '/' },
+    { label: 'Products', path: '/products' },
+    { label: 'Services', path: '/services' },
+    { label: 'Blog', path: '/blog' },
+    { label: 'Opportunities', path: '/opportunities' },
+    { label: 'Contact', path: '/contact' },
+    { label: 'Partners', path: '/partners' },
+  ];
+
+  const companyLinks = [
+    { label: 'About Us', path: '/about' },
+    { label: 'Our Team', path: '/board' },
+    { label: 'Testimonials', path: '/testimonials' },
+    { label: 'Pricing', path: '/pricing' },
+  ];
+
   return (
-      <header className="w-full z-[100] transition-all duration-300">
-      {/* Top Header - Hidden on mobile */}
-      <div className="hidden md:block bg-surface border-b border-border py-2 text-xs text-text/80">
-        <div className="container mx-auto px-4 md:px-6">
+    <header 
+      className={`w-full z-[100] fixed top-0 left-0 right-0 transition-all duration-500 ${
+        scrolled 
+          ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-100' 
+          : 'bg-transparent'
+      }`}
+    >
+      {/* ============================================================
+          TOP HEADER - Contact Info & Social (Hidden on Mobile)
+          ============================================================ */}
+      <div className="hidden md:block bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 py-2.5 text-xs text-gray-600">
+        <div className="container mx-auto px-8 md:px-12 lg:px-20">
           <div className="flex justify-between items-center">
-            <div className="flex gap-6">
-              <span className="flex items-center gap-2">
-                <i className="bi bi-geo-alt-fill text-primary-500"></i>
-                1321 Gateway Atlantic City, Florida, 54012
+            {/* Left: Contact Info */}
+            <div className="flex items-center gap-6">
+              <span className="flex items-center gap-1.5 font-light">
+                <i className="bi bi-geo-alt-fill text-[#72bf24] text-sm"></i>
+                National Innovation Hub, Kampala, Uganda
               </span>
-              <a href="mailto:info@satesoft.com" className="flex items-center gap-2 hover:text-primary-500 transition-colors">
-                <i className="bi bi-envelope text-primary-500"></i>
+              <a 
+                href="mailto:info@satesoft.com" 
+                className="flex items-center gap-1.5 hover:text-[#72bf24] transition-colors duration-300 font-light"
+              >
+                <i className="bi bi-envelope text-[#72bf24] text-sm"></i>
                 info@satesoft.com
               </a>
-              <span className="flex items-center gap-2">
-                <i className="bi bi-alarm text-primary-500"></i>
-                9.00 am - 5.00 pm
+              <span className="flex items-center gap-1.5 font-light">
+                <i className="bi bi-alarm text-[#72bf24] text-sm"></i>
+                9.00 am - 5.30 pm
               </span>
             </div>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-primary-500 transition-colors"><i className="fab fa-facebook-f"></i></a>
-              <a href="https://twitter.com/satesoft" target="_blank" rel="noreferrer" className="hover:text-primary-500 transition-colors"><i className="fab fa-twitter"></i></a>
-              <a href="#" className="hover:text-primary-500 transition-colors"><i className="fab fa-linkedin-in"></i></a>
-              <a href="#" className="hover:text-primary-500 transition-colors"><i className="fab fa-pinterest-p"></i></a>
+            
+            {/* Right: Social Media */}
+            <div className="flex items-center gap-4">
+              <a 
+                href="#" 
+                className="text-gray-400 hover:text-[#72bf24] transition-all duration-300 hover:scale-110"
+                aria-label="Facebook"
+              >
+                <i className="fab fa-facebook-f text-sm"></i>
+              </a>
+              <a 
+                href="https://twitter.com/satesoft" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-400 hover:text-[#72bf24] transition-all duration-300 hover:scale-110"
+                aria-label="Twitter"
+              >
+                <i className="fab fa-twitter text-sm"></i>
+              </a>
+              <a 
+                href="#" 
+                className="text-gray-400 hover:text-[#72bf24] transition-all duration-300 hover:scale-110"
+                aria-label="LinkedIn"
+              >
+                <i className="fab fa-linkedin-in text-sm"></i>
+              </a>
+              <a 
+                href="#" 
+                className="text-gray-400 hover:text-[#72bf24] transition-all duration-300 hover:scale-110"
+                aria-label="Pinterest"
+              >
+                <i className="fab fa-pinterest-p text-sm"></i>
+              </a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Navigation */}
-      <div className={`w-full transition-all duration-300 ${scrolled ? 'fixed top-0 bg-surface/90 backdrop-blur-md shadow-sm py-3' : 'bg-surface py-5 relative'}`}>
-        <div className="container mx-auto px-4 md:px-6">
+      {/* ============================================================
+          MAIN NAVIGATION
+          ============================================================ */}
+      <div className="w-full py-3 transition-all duration-300">
+        <div className="container mx-auto px-8 md:px-12 lg:px-20">
           <div className="flex justify-between items-center">
+            
             {/* Logo */}
             <div className="flex-shrink-0">
-               <Link to="/" className="flex items-center">
-                <h1 className="font-bold text-2xl tracking-tight m-0">
-                  <span className="text-text">SATE</span><span className="text-primary-500">SOFT</span>
-                </h1>
+              <Link to="/" className="flex items-center hover:opacity-80 transition-opacity duration-300">
+                <Logo textClassName="text-[#72bf24]" showText={true} size="md" />
               </Link>
             </div>
 
-            {/* Desktop Menu */}
+            {/* ==========================================================
+                DESKTOP MENU (Hidden on Mobile)
+                ========================================================== */}
             <nav className="hidden lg:flex items-center space-x-8">
-              <Link to="/" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/' ? 'text-primary-500' : 'text-text'}`}>Home</Link>
-              
+              {navLinks.map((link) => {
+                const isActive = link.path === '/' 
+                  ? location.pathname === '/' 
+                  : location.pathname.startsWith(link.path);
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`relative font-normal text-sm transition-all duration-300 group ${
+                      isActive ? 'text-[#72bf24]' : 'text-gray-600 hover:text-[#72bf24]'
+                    }`}
+                  >
+                    {link.label}
+                    <span className={`absolute left-0 bottom-0 h-0.5 bg-[#72bf24] transition-all duration-300 ${
+                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}></span>
+                  </Link>
+                );
+              })}
+
+              {/* Company Dropdown */}
               <div className="relative group" ref={companyRef}>
-                 <button
-                   type="button"
-                   onClick={() => setCompanyOpen((o) => !o)}
-                   aria-haspopup="true"
-                   aria-expanded={companyOpen}
-                   className={`font-semibold text-sm transition-colors hover:text-primary-500 flex items-center gap-1 ${location.pathname === '/about' || location.pathname === '/board' || location.pathname === '/pricing' || location.pathname === '/testimonials' ? 'text-primary-500' : 'text-text'}`}
-                 >
-                   Company <i className={`bi bi-chevron-down text-[10px] transition-transform duration-200 ${companyOpen ? 'rotate-180' : ''}`}></i>
-                 </button>
-                  <div className={`absolute top-full left-0 mt-2 w-56 bg-surface rounded-xl shadow-xl border border-border overflow-hidden transition-all duration-300 transform z-[60] ${companyOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0'}`}>
-                    <div className="py-2">
-                      <Link to="/about" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">About Us</Link>
-                      <Link to="/board" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Our Team</Link>
-                      <Link to="/testimonials" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Testimonials</Link>
-                      <Link to="/pricing" className="block px-5 py-3 text-sm font-bold text-text hover:bg-primary-50 hover:text-primary-600 transition-colors border-l-4 border-transparent hover:border-primary-500">Pricing</Link>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => setCompanyOpen((o) => !o)}
+                  aria-haspopup="true"
+                  aria-expanded={companyOpen}
+                  className={`relative font-normal text-sm transition-all duration-300 flex items-center gap-1 group ${
+                    location.pathname === '/about' || 
+                    location.pathname === '/board' || 
+                    location.pathname === '/pricing' || 
+                    location.pathname === '/testimonials'
+                      ? 'text-[#72bf24]' 
+                      : 'text-gray-600 hover:text-[#72bf24]'
+                  }`}
+                >
+                  Company
+                  <i className={`bi bi-chevron-down text-[10px] transition-transform duration-300 ${
+                    companyOpen ? 'rotate-180' : ''
+                  }`}></i>
+                  <span className="absolute left-0 bottom-0 h-0.5 bg-[#72bf24] transition-all duration-300 w-0 group-hover:w-full"></span>
+                </button>
+                
+                {/* Dropdown Menu */}
+                <div 
+                  className={`absolute top-full left-0 mt-3 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 transform z-[60] ${
+                    companyOpen 
+                      ? 'opacity-100 visible translate-y-0' 
+                      : 'opacity-0 invisible -translate-y-2'
+                  }`}
+                >
+                  <div className="py-2">
+                    {companyLinks.map((link) => {
+                      const isActive = location.pathname === link.path;
+                      return (
+                        <Link
+                          key={link.path}
+                          to={link.path}
+                          className={`block px-5 py-2.5 text-sm font-normal transition-all duration-300 border-l-4 ${
+                            isActive
+                              ? 'border-[#72bf24] text-[#72bf24] bg-[#72bf24]/5'
+                              : 'border-transparent text-gray-600 hover:bg-[#72bf24]/5 hover:text-[#72bf24] hover:border-[#72bf24]'
+                          }`}
+                        >
+                          {link.label}
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
-
-              <Link to="/products" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/products' ? 'text-primary-500' : 'text-text'}`}>Portfolio</Link>
-              <Link to="/services" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/services' ? 'text-primary-500' : 'text-text'}`}>Services</Link>
-              <Link to="/blog" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname.startsWith('/blog') ? 'text-primary-500' : 'text-text'}`}>Blog</Link>
-              <Link to="/contact" className={`font-semibold text-sm transition-colors hover:text-primary-500 ${location.pathname === '/contact' ? 'text-primary-500' : 'text-text'}`}>Contact</Link>
+              </div>
             </nav>
 
-            {/* CTA & Mobile Toggle */}
+            {/* ==========================================================
+                CTA BUTTON & MOBILE TOGGLE
+                ========================================================== */}
             <div className="flex items-center gap-4">
-              <Link to="/contact" className="btn-primary hidden md:inline-flex">
+              {/* Get A Quote Button */}
+              <Link 
+                to="/contact" 
+                className="hidden md:inline-flex items-center gap-2 bg-[#72bf24] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#62a71e] hover:shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <i className="bi bi-chat-dots"></i>
                 Get A Quote
               </Link>
+              
+              {/* Mobile Toggle Button */}
               <button
                 onClick={toggleMobile}
-                className="lg:hidden text-text hover:text-primary-500 transition-colors p-2"
+                className="lg:hidden text-gray-600 hover:text-[#72bf24] transition-all duration-300 p-2 hover:bg-[#72bf24]/10 rounded-lg"
                 aria-label="Toggle menu"
               >
                 <i className={`fas ${mobileOpen ? 'fa-times' : 'fa-bars'} text-xl`}></i>
@@ -124,23 +240,73 @@ export default function Appheader() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileOpen && (
-          <div className="lg:hidden bg-surface border-t border-border py-4 px-4">
-            <nav className="flex flex-col space-y-3">
-              <Link to="/" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Home</Link>
-              <Link to="/about" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">About</Link>
-              <Link to="/board" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Our Team</Link>
-              <Link to="/testimonials" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Testimonials</Link>
-              <Link to="/pricing" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Pricing</Link>
-              <Link to="/products" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Portfolio</Link>
-              <Link to="/services" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Services</Link>
-              <Link to="/blog" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Blog</Link>
-              <Link to="/contact" onClick={toggleMobile} className="font-semibold text-sm text-text hover:text-primary-500 transition-colors py-2">Contact</Link>
-              <Link to="/admin/login" onClick={toggleMobile} className="font-semibold text-sm text-primary-500 hover:text-primary-600 transition-colors py-2 mt-2 border-t border-border pt-3">Admin Portal</Link>
+        {/* ============================================================
+            MOBILE MENU
+            ============================================================ */}
+        <div 
+          className={`lg:hidden overflow-hidden transition-all duration-500 ${
+            mobileOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="bg-white border-t border-gray-100 py-4 px-6 shadow-lg">
+            <nav className="flex flex-col space-y-1">
+              {/* Main Navigation */}
+              {navLinks.map((link) => {
+                const isActive = link.path === '/' 
+                  ? location.pathname === '/' 
+                  : location.pathname.startsWith(link.path);
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={toggleMobile}
+                    className={`relative font-normal text-sm transition-all duration-300 py-2.5 px-4 rounded-lg ${
+                      isActive
+                        ? 'text-[#72bf24] bg-[#72bf24]/5'
+                        : 'text-gray-600 hover:text-[#72bf24] hover:bg-gray-50'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              {/* Company Links in Mobile */}
+              <div className="mt-1 pt-2 border-t border-gray-100">
+                <p className="text-xs font-normal text-gray-400 uppercase tracking-wider px-4 py-1">
+                  Company
+                </p>
+                {companyLinks.map((link) => {
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onClick={toggleMobile}
+                      className={`relative font-normal text-sm transition-all duration-300 py-2.5 px-4 rounded-lg ${
+                        isActive
+                          ? 'text-[#72bf24] bg-[#72bf24]/5'
+                          : 'text-gray-600 hover:text-[#72bf24] hover:bg-gray-50'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Admin Portal */}
+              <Link
+                to="/admin/login"
+                onClick={toggleMobile}
+                className="mt-2 font-normal text-sm text-[#72bf24] hover:text-[#62a71e] transition-all duration-300 py-2.5 px-4 rounded-lg border border-[#72bf24]/20 hover:bg-[#72bf24]/5 flex items-center gap-2"
+              >
+                <i className="bi bi-shield-lock"></i>
+                Admin Portal
+              </Link>
             </nav>
           </div>
-        )}
+        </div>
       </div>
     </header>
   );

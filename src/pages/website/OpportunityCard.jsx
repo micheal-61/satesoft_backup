@@ -2,7 +2,7 @@ import React from 'react';
 
 export const OpportunityCard = ({ title, jobType, paymentType, description, keyRequirements }) => {
   return (
-    <div className="bg-surface border border-border rounded-2xl p-8 w-full max-w-md shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
+    <div className="bg-surface border border-border rounded-3xl p-8 w-full max-w-md shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
       <h2 className="text-2xl font-bold mb-3 text-text group-hover:text-primary-600 transition-colors">{title}</h2>
       
       <div className="flex flex-wrap gap-2 mb-4">

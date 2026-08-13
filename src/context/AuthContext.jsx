@@ -42,8 +42,34 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      const response = await axios.post('/api/auth/forgot-password', { email });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Failed to process request.'
+      };
+    }
+  };
+
+  const resetPassword = async (token, newPassword) => {
+    try {
+      const response = await axios.post('/api/auth/reset-password', { token, newPassword });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.error || 'Failed to reset password.'
+      };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, forgotPassword, resetPassword, loading }}>
       {children}
     </AuthContext.Provider>
   );
