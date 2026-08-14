@@ -1,9 +1,8 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
-  FaArrowRight, FaClock, FaComments, FaSearch, FaTag, FaUser, 
-  FaCalendarAlt, FaShareAlt, FaEye, FaArrowLeft, FaArrowRight as FaArrowRightIcon,
-  FaNewspaper, FaRocket, FaHandshake, FaCode
+  FaClock, FaComments, FaSearch, FaCalendarAlt, FaEye, FaNewspaper, 
+  FaRocket, FaHandshake, FaCode, FaArrowRight
 } from "react-icons/fa";
 
 const Blog = () => {
@@ -12,11 +11,7 @@ const Blog = () => {
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Category icons mapping
   const categoryIcons = {
     'Company News': FaNewspaper,
     'Product Updates': FaRocket,
@@ -40,9 +35,8 @@ const Blog = () => {
     fetchNews();
   }, []);
 
-  // Extract unique categories from articles
   const categories = useMemo(() => {
-    const uniqueCategories = ['All', ...new Set(articles.map(a => a.category))];
+    const uniqueCategories = ['All', ...new Set(articles.map(a => a.category) || [])];
     return uniqueCategories;
   }, [articles]);
 
@@ -67,53 +61,13 @@ const Blog = () => {
       .substring(0, 50);
   };
 
-  // Reset carousel when filter changes
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [filteredArticles, activeCategory, searchTerm]);
-
-  const goToSlide = useCallback((index) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 800);
-  }, [isTransitioning]);
-
-  const nextSlide = useCallback(() => {
-    if (isTransitioning || filteredArticles.length === 0) return;
-    setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev + 1) % filteredArticles.length);
-    setTimeout(() => setIsTransitioning(false), 800);
-  }, [filteredArticles.length, isTransitioning]);
-
-  const prevSlide = useCallback(() => {
-    if (isTransitioning || filteredArticles.length === 0) return;
-    setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev - 1 + filteredArticles.length) % filteredArticles.length);
-    setTimeout(() => setIsTransitioning(false), 800);
-  }, [filteredArticles.length, isTransitioning]);
-
-  // Auto-rotate carousel
-  useEffect(() => {
-    if (filteredArticles.length <= 1 || !isAutoPlaying) return;
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [filteredArticles.length, nextSlide, isAutoPlaying]);
-
-  // Pause autoplay on hover
-  const handleMouseEnter = () => setIsAutoPlaying(false);
-  const handleMouseLeave = () => setIsAutoPlaying(true);
-
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'Recent';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'long', 
       day: 'numeric', 
-      year: 'numeric' 
+      year: 'numeric'
     });
   };
 
@@ -149,15 +103,10 @@ const Blog = () => {
     );
   }
 
-  const currentArticle = filteredArticles[currentIndex];
-  const CategoryIcon = currentArticle?.category ? categoryIcons[currentArticle.category] || FaNewspaper : FaNewspaper;
-
   return (
     <section className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-20 md:py-28">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* ============================================================
-            HERO HEADER
-            ============================================================ */}
+        {/* HERO HEADER */}
         <div className="text-center mb-16 animate-fadeInUp">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#72bf24]/10 border border-[#72bf24]/20 rounded-full text-[#72bf24] text-sm font-medium mb-4">
             <FaNewspaper className="text-[#72bf24]" />
@@ -171,9 +120,7 @@ const Blog = () => {
           </p>
         </div>
 
-        {/* ============================================================
-            FILTERS & SEARCH
-            ============================================================ */}
+        {/* FILTERS & SEARCH */}
         <div className="mb-12 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
@@ -211,133 +158,89 @@ const Blog = () => {
           </div>
         </div>
 
-        {/* ============================================================
-            CAROUSEL
-            ============================================================ */}
+        {/* ARTICLES GRID */}
         {filteredArticles.length > 0 ? (
-          <div 
-            className="relative"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            <div className="overflow-hidden rounded-2xl">
-              <div
-                className={`transition-all duration-700 ease-in-out ${
-                  isTransitioning ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
-                }`}
-              >
-                <Link
-                  to={`/blog/${currentArticle.slug || generateSlug(currentArticle.title)}`}
-                  className="group relative block overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-500"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {filteredArticles.map((article) => {
+              const CategoryIcon = article.category ? categoryIcons[article.category] || FaNewspaper : FaNewspaper;
+              return (
+                <div
+                  key={article.id || article.title}
+                  className="group relative block overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
                 >
-                  <div className="grid lg:grid-cols-5">
-                    {/* Image */}
-                    <div className="relative h-72 sm:h-96 lg:h-auto lg:col-span-2 overflow-hidden bg-gray-100">
-                      <img
-                        src={currentArticle.image_url || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500"}
-                        alt={currentArticle.title}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-gray-900/20 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-gray-900/10" />
-                      
-                      {/* Category Badge */}
-                      <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full bg-white/90 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-[#72bf24] shadow-lg">
-                        <CategoryIcon className="text-[#72bf24]" />
-                        {currentArticle.category}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="lg:col-span-3 flex flex-col justify-center p-6 sm:p-8 lg:p-10">
-                      <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                        <span className="flex items-center gap-1.5">
-                          <FaCalendarAlt className="text-[#72bf24]" />
-                          {formatDate(currentArticle.published_at || currentArticle.created_at)}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <FaClock className="text-[#72bf24]" />
-                          {currentArticle.readTime || "5 min read"}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-3 leading-tight group-hover:text-[#72bf24] transition-colors">
-                        {currentArticle.title}
-                      </h3>
-                      
-                      <p className="text-base text-gray-600 leading-relaxed line-clamp-2 mb-4">
-                        {currentArticle.excerpt || "Read more about this insightful article..."}
-                      </p>
-                      
-                      <div className="flex flex-wrap items-center gap-5 text-sm text-gray-500">
-                        <span className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-[#72bf24]/10 flex items-center justify-center text-[#72bf24] font-semibold text-xs">
-                            {currentArticle.author?.charAt(0) || 'S'}
-                          </div>
-                          {currentArticle.author || "Satesoft Team"}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <FaComments className="text-[#72bf24]" />
-                          {currentArticle.comments || 0} comments
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <FaEye className="text-[#72bf24]" />
-                          {currentArticle.views || 0} views
-                        </span>
-                      </div>
-                      
-                      <div className="mt-6">
-                        <span className="inline-flex items-center font-semibold text-[#72bf24] group-hover:text-[#62a71e] transition-colors">
-                          Read full article 
-                          <FaArrowRight className="ml-2 transition-transform group-hover:translate-x-1" />
-                        </span>
-                      </div>
+                  {/* Image */}
+                  <div className="relative h-56 overflow-hidden bg-gray-100">
+                    <img
+                      src={article.image_url || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500"}
+                      alt={article.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-gray-900/10 to-transparent" />
+                    
+                    {/* Category Badge */}
+                    <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full bg-white/90 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-[#72bf24] shadow-lg">
+                      <CategoryIcon className="text-[#72bf24]" />
+                      {article.category || "General"}
                     </div>
                   </div>
-                </Link>
-              </div>
-            </div>
 
-            {/* Navigation Controls */}
-            {filteredArticles.length > 1 && (
-              <>
-                <div className="flex items-center justify-center gap-4 mt-8">
-                  <button
-                    onClick={prevSlide}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all duration-300 hover:border-[#72bf24] hover:text-[#72bf24] hover:shadow-md"
-                    aria-label="Previous slide"
-                  >
-                    <FaArrowLeft className="text-sm" />
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    {filteredArticles.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => goToSlide(idx)}
-                        className={`rounded-full transition-all duration-500 ${
-                          idx === currentIndex
-                            ? "h-2.5 w-8 bg-[#72bf24] shadow-md shadow-[#72bf24]/30"
-                            : "h-2.5 w-2.5 bg-gray-300 hover:bg-[#72bf24]/50"
-                        }`}
-                        aria-label={`Go to slide ${idx + 1}`}
-                      />
-                    ))}
+                  {/* Content */}
+                  <div className="p-5">
+                    <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
+                      <span className="flex items-center gap-1.5">
+                        <FaCalendarAlt className="text-[#72bf24]" />
+                        {formatDate(article.published_at || article.created_at)}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <FaClock className="text-[#72bf24]" />
+                        {article.readTime || "5 min read"}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 leading-tight group-hover:text-[#72bf24] transition-colors line-clamp-2">
+                      {article.title}
+                    </h3>
+                    
+                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-4">
+                      {article.excerpt || "Read more about this insightful article..."}
+                    </p>
+                    
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                       <span className="flex items-center gap-1.5">
+                         <div className="w-6 h-6 rounded-full bg-[#72bf24]/10 flex items-center justify-center text-[#72bf24] font-semibold text-xs">
+                           {article.author?.charAt(0) || 'S'}
+                         </div>
+                         {article.author || "Satesoft Team"}
+                       </span>
+                       
+                       <Link 
+                         to={`/blog/${article.slug || generateSlug(article.title)}`}
+                         className="flex items-center gap-1.5 hover:text-[#72bf24] transition-colors"
+                       >
+                         <FaComments className="text-[#72bf24]" />
+                         <span>{article.comments || 0}</span>
+                       </Link>
+                       
+                       <span className="flex items-center gap-1.5">
+                         <FaEye className="text-[#72bf24]" />
+                         {article.views || 0}
+                       </span>
+                     </div>
                   </div>
 
-                  <button
-                    onClick={nextSlide}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition-all duration-300 hover:border-[#72bf24] hover:text-[#72bf24] hover:shadow-md"
-                    aria-label="Next slide"
-                  >
-                    <FaArrowRightIcon className="text-sm" />
-                  </button>
+                  {/* Read more button */}
+                  <div className="p-5 pt-0">
+                    <Link 
+                      to={`/blog/${article.slug || generateSlug(article.title)}`}
+                      className="inline-flex items-center text-sm font-semibold text-[#72bf24] group-hover:text-[#62a71e] transition-colors"
+                    >
+                      Read full article 
+                      <FaArrowRight className="ml-2 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </div>
                 </div>
-
-                <div className="mt-3 text-center text-sm text-gray-400 font-light">
-                  {currentIndex + 1} of {filteredArticles.length} articles
-                </div>
-              </>
-            )}
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-16 text-center">
@@ -350,9 +253,7 @@ const Blog = () => {
         )}
       </div>
 
-      {/* ============================================================
-          CSS ANIMATIONS
-          ============================================================ */}
+      {/* CSS */}
       <style jsx>{`
         @keyframes fadeInUp {
           from {

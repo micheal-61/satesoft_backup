@@ -26,7 +26,8 @@ import ProductDetailsDuqcat from "./pages/website/Productdetailsduqcat";
 import ProductDetailsKaribyshoo from "./pages/website/ProductdetailsKaribyshoo";
 import ProductDetailsFoundDocument from "./pages/website/ProductdetailsFoundDocument";
 import Opportunities from "./pages/website/Opportunities";
-import OpportunitiesApplicationForm from "./pages/website/OpportunitiesApplicationForm";
+import OpportunityDetails from "./pages/website/OpportunityDetails";
+import OpportunityApplication from "./pages/website/OpportunityApplication";
 import Partners from "./pages/website/Partners";
 import BlogDetails from "./pages/website/BlogDetails";
 import Environmental from "./pages/website/Environmental";
@@ -91,8 +92,10 @@ export const routesConfig = [
     path: "/",
     element: <PublicLayout />,
     children: [
-      { index: true, element: <Home /> },
-      { path: "about", element: <AppAbout /> },
+      // The About Us page is now the site's landing page; the previous
+      // homepage remains available from Company > About Us.
+      { index: true, element: <AppAbout /> },
+      { path: "about", element: <Home /> },
       { path: "products", element: <Products /> },
       { path: "services", element: <Services /> },
       { path: "services/:id", element: <ServiceDetails /> },
@@ -103,13 +106,14 @@ export const routesConfig = [
       { path: "blog", element: <Blog /> },
       { path: "board", element: <Board /> },
       { path: "opportunities", element: <Opportunities /> },
+      { path: "opportunities/:id", element: <OpportunityDetails /> },
+      { path: "opportunities/:id/apply", element: <OpportunityApplication /> },
       { path: "partners", element: <Partners /> },
       { path: "products/duqact", element: <ProductDetailsDuqcat /> },
       { path: "products/karibyshoo", element: <ProductDetailsKaribyshoo /> },
       { path: "products/founddocument", element: <ProductDetailsFoundDocument /> },
       { path: "products/:id", element: <ProductDetails /> },
       { path: "blog/:slug", element: <BlogDetails /> },
-      { path: "opportunities/ApplicationForm", element: <OpportunitiesApplicationForm /> },
       { path: "environmental", element: <Environmental /> },
       { path: "privacy-policy", element: <PrivacyPolicy /> },
       { path: "service-agreement", element: <ServiceAgreement /> },

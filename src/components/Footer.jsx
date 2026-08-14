@@ -111,11 +111,10 @@ function Footer() {
               <div>
                 <a 
                   href="tel:+44920090505" 
-                  className="text-base md:text-lg font-bold text-primary-500 hover:text-primary-600 transition-colors relative group"
+                  className="text-base md:text-lg font-bold text-primary-500 hover:text-primary-600 transition-colors"
                 >
                   +256 749095200
                   +256 791248471
-                  <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-primary-500 transition-all duration-300 group-hover:w-full"></span>
                 </a>
               </div>
             </div>
@@ -203,12 +202,11 @@ function Footer() {
               <ul className="space-y-2">
                 {navigationLinks.company.map((link) => (
                   <li key={link.path}>
-                    <Link 
+                     <Link 
                       to={link.path} 
-                      className="hover:text-[#72bf24] transition-colors block font-normal text-[13px] relative group w-fit"
+                      className="hover:text-[#72bf24] transition-colors block font-normal text-[13px] hover:font-bold w-fit"
                     >
                       {link.label}
-                      <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
                     </Link>
                   </li>
                 ))}
@@ -228,12 +226,11 @@ function Footer() {
                 ) : services.length > 0 ? (
                   services.slice(0, 5).map((service) => (
                     <li key={service.id}>
-                      <Link 
+                       <Link 
                         to={`/services/${service.id}`} 
-                        className="hover:text-[#72bf24] transition-colors block font-normal text-[13px] relative group w-fit"
+                        className="hover:text-[#72bf24] transition-colors block font-normal text-[13px] hover:font-bold"
                       >
                         {service.title}
-                        <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
                       </Link>
                     </li>
                   ))
@@ -289,13 +286,12 @@ function Footer() {
                 if (link.condition === undefined || link.condition) {
                   return (
                     <li key={link.path}>
-                      <Link 
-                        to={link.path} 
-                        className="hover:text-[#72bf24] transition-colors font-normal relative group"
-                      >
-                        {link.label}
-                        <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
-                      </Link>
+                        <Link 
+                          to={link.path} 
+                          className="hover:text-[#72bf24] transition-colors font-normal hover:font-bold"
+                        >
+                          {link.label}
+                        </Link>
                     </li>
                   );
                 }
@@ -303,12 +299,11 @@ function Footer() {
               })}
               {/* Admin Link */}
               <li>
-                <Link 
+                 <Link 
                   to="/admin/login" 
-                  className="text-[#72bf24] font-normal hover:text-[#62a71e] transition-colors relative group"
+                  className="text-[#72bf24] font-normal hover:text-[#62a71e] hover:font-bold transition-colors"
                 >
                   Admin
-                  <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-[#72bf24] transition-all duration-300 group-hover:w-full"></span>
                 </Link>
               </li>
             </ul>

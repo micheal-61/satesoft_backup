@@ -25,8 +25,6 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  const brandLabels = ["SateSoft Cloud", "SecureOps", "DataCore", "Digital Works"];
-
   const handleLearnMore = async (project) => {
     setSelectedProject(project);
     setLoadingDetails(true);
@@ -125,12 +123,12 @@ const Products = () => {
                     <p className="text-sm text-gray-500 font-light mb-4 line-clamp-2">
                       {project.tagline || project.description || "Innovative solution for modern businesses."}
                     </p>
-                    <button 
-                      onClick={() => handleLearnMore(project)} 
-                      className="w-full py-3 bg-[#72bf24] hover:bg-[#62a71e] text-white font-semibold rounded-xl transition-all duration-300 text-sm tracking-wider uppercase hover:shadow-lg hover:-translate-y-0.5"
+                    <Link
+                      to={`/products/${project.id}`}
+                      className="block w-full rounded-xl bg-[#72bf24] py-3 text-center text-sm font-semibold uppercase tracking-wider text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#62a71e] hover:shadow-lg"
                     >
                       Learn More
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -144,21 +142,6 @@ const Products = () => {
           )}
         </div>
       </section>
-
-      {/* Brand Labels */}
-      <div className="py-12 bg-white border-t border-gray-100">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="flex justify-center md:justify-between items-center flex-wrap gap-6 opacity-60 hover:opacity-100 transition-all duration-700">
-            {brandLabels.map((label) => (
-              <div className="flex items-center" key={label}>
-                <span className="text-xl md:text-2xl font-black text-gray-800 uppercase tracking-tighter hover:text-[#72bf24] transition-colors duration-300">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Project Details Modal */}
       {selectedProject && (

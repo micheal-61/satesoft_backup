@@ -16,6 +16,8 @@ import Pricing from './pages/website/Pricing';
 import Testimonials from './pages/website/Testimonials';
 import Board from './pages/website/Board';
 import Opportunities from './pages/website/Opportunities';
+import OpportunityDetails from './pages/website/OpportunityDetails';
+import OpportunityApplication from './pages/website/OpportunityApplication';
 
 // Admin application (keeps the existing admin UI available under /admin)
 import AdminApp from './pages/admin/RaincloudDashboard';
@@ -25,8 +27,8 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route element={<WebsiteLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
+        <Route path="/" element={<About />} />
+        <Route path="/about" element={<Home />} />
         <Route path="/board" element={<Board />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/testimonials" element={<Testimonials />} />
@@ -39,6 +41,8 @@ export default function AppRouter() {
         <Route path="/blog/:slug" element={<BlogDetails />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/opportunities" element={<Opportunities />} />
+        <Route path="/opportunities/:id" element={<OpportunityDetails />} />
+        <Route path="/opportunities/:id/apply" element={<OpportunityApplication />} />
         <Route path="*" element={<Home />} />
       </Route>
 

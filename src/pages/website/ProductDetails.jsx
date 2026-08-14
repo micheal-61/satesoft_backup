@@ -48,8 +48,8 @@ const ProductDetails = () => {
       <div className="py-28 bg-bg min-h-screen">
         <div className="container mx-auto px-8 sm:px-12 lg:px-20 text-center">
           <p className="text-red-500 text-lg mb-6">{error}</p>
-          <Link to="/" className="btn-primary">
-            Back to Homepage
+          <Link to="/products" className="btn-primary">
+            Back to Products
           </Link>
         </div>
       </div>
@@ -66,11 +66,11 @@ const ProductDetails = () => {
         {/* Back Button */}
         <div className="mb-12">
           <Link
-            to="/"
+            to="/products"
             className="inline-flex items-center text-gray-900 font-normal tracking-widest text-sm hover:text-[#72bf24] transition-colors uppercase group"
           >
             <ArrowLeft className="mr-2 transform group-hover:-translate-x-1 transition-transform" />
-            Back to Homepage
+            Back to Products
           </Link>
         </div>
 

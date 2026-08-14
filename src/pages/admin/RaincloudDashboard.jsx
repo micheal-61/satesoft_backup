@@ -264,7 +264,11 @@ export default function SatesoftApp() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === 'applicants') fetchApplicants();
+    if (activeTab === 'applicants') {
+      fetchApplicants();
+      const interval = setInterval(() => fetchApplicants(), 10000);
+      return () => clearInterval(interval);
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -2547,8 +2551,112 @@ export default function SatesoftApp() {
         .hover-scale:hover {
           transform: scale(1.02);
         }
+
+        /* Dedicated form workspaces — add and edit actions feel like focused pages. */
+        .admin-app {
+          background:
+            radial-gradient(circle at 78% -8%, rgba(114, 191, 36, 0.13), transparent 30%),
+            radial-gradient(circle at 10% 100%, rgba(16, 185, 129, 0.08), transparent 28%),
+            #f8fafc;
+        }
+        .admin-app .admin-sidebar {
+          box-shadow: 18px 0 45px rgba(15, 23, 42, 0.035);
+        }
+        .admin-app > .fixed.inset-0:has(form) {
+          align-items: stretch;
+          justify-content: stretch;
+          padding: 0;
+          background: #f8fafc;
+          backdrop-filter: none;
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white {
+          width: 100%;
+          max-width: none;
+          min-height: 100vh;
+          height: 100vh;
+          max-height: none;
+          overflow-y: auto;
+          border: 0;
+          border-radius: 0;
+          padding: clamp(2rem, 5vw, 4.5rem) clamp(1.5rem, 9vw, 10rem);
+          box-shadow: none;
+          background:
+            linear-gradient(135deg, rgba(114, 191, 36, 0.08), transparent 35%),
+            #ffffff;
+          animation: adminFormEnter 360ms cubic-bezier(.16, 1, .3, 1) both;
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white > :first-child {
+          max-width: 940px;
+          margin-left: auto;
+          margin-right: auto;
+          padding-bottom: 1.5rem;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white > :first-child h3 {
+          font-size: clamp(1.5rem, 2vw, 2rem);
+          letter-spacing: -0.035em;
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form {
+          max-width: 940px;
+          margin: 2rem auto 0;
+          padding: clamp(1.25rem, 3vw, 2.25rem);
+          border: 1px solid #e2e8f0;
+          border-radius: 1.25rem;
+          background: rgba(255, 255, 255, 0.92);
+          box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form label {
+          color: #334155;
+          font-size: 0.75rem;
+          letter-spacing: 0.025em;
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form input,
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form select,
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form textarea {
+          border-color: #dbe4ee;
+          background: #fbfdff;
+          padding: 0.7rem 0.9rem;
+          box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.025);
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form input:focus,
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form select:focus,
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form textarea:focus {
+          border-color: #72bf24;
+          box-shadow: 0 0 0 4px rgba(114, 191, 36, 0.13);
+        }
+        .admin-app > .fixed.inset-0:has(form) > .bg-white form > .flex:last-child {
+          position: sticky;
+          bottom: -2.25rem;
+          margin: 1.75rem -2.25rem -2.25rem;
+          padding: 1rem 2.25rem;
+          background: rgba(255, 255, 255, 0.95);
+          border-top: 1px solid #e2e8f0;
+          backdrop-filter: blur(12px);
+        }
+        @keyframes adminFormEnter {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (min-width: 768px) {
+          .admin-app > .fixed.inset-0:has(form) > .bg-white form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            column-gap: 1.5rem;
+          }
+          .admin-app > .fixed.inset-0:has(form) > .bg-white form > :nth-last-child(2),
+          .admin-app > .fixed.inset-0:has(form) > .bg-white form > :last-child {
+            grid-column: 1 / -1;
+          }
+        }
+        @media (max-width: 767px) {
+          .admin-app > .fixed.inset-0:has(form) > .bg-white form > .flex:last-child {
+            bottom: -1.25rem;
+            margin: 1.25rem -1.25rem -1.25rem;
+            padding: 1rem 1.25rem;
+          }
+        }
       `}</style>
-      <div className={`flex h-screen bg-slate-50/50 text-slate-800 font-sans antialiased overflow-hidden backdrop-blur-sm ${darkMode ? 'admin-dark-mode' : ''}`}>
+      <div className={`admin-app flex h-screen bg-slate-50/50 text-slate-800 font-sans antialiased overflow-hidden backdrop-blur-sm ${darkMode ? 'admin-dark-mode' : ''}`}>
         {/* Sidebar Navigation */}
         <aside className="w-72 bg-white/95 border-r border-slate-200/80 flex flex-col p-8 gap-5 shrink-0 backdrop-blur-xl relative admin-sidebar">
           {/* Vertical nav indicator line */}
@@ -3475,19 +3583,28 @@ export default function SatesoftApp() {
             {/* ==================== APPLICANTS VIEW ==================== */}
             {activeTab === 'applicants' && (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Applicants</h1>
-                    <p className="text-sm text-slate-500 mt-1">Review and manage job applications</p>
-                  </div>
-                  <button
-                    onClick={handleOpenAddApplicant}
-                    className="bg-[#72bf24] hover:bg-[#62a71e] text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
-                  >
-                    <Plus className="w-4 h-4 stroke-[2.5]" />
-                    <span>Add Applicant</span>
-                  </button>
-                </div>
+                   <div className="flex items-center justify-between">
+                   <div>
+                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Applicants</h1>
+                     <p className="text-sm text-slate-500 mt-1">Review and manage job applications</p>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <button
+                       onClick={fetchApplicants}
+                       className="p-2 text-slate-600 hover:text-[#72bf24] hover:bg-[#72bf24]/10 rounded-xl transition-colors"
+                       title="Refresh applicants"
+                     >
+                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5m0-5l7 7 7-7v5H4z"></path></svg>
+                     </button>
+                     <button
+                       onClick={handleOpenAddApplicant}
+                       className="bg-[#72bf24] hover:bg-[#62a71e] text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+                     >
+                       <Plus className="w-4 h-4 stroke-[2.5]" />
+                       <span>Add Applicant</span>
+                     </button>
+                   </div>
+                 </div>
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -3583,13 +3700,13 @@ export default function SatesoftApp() {
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
                       <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
-                        <th className="py-4 pl-6 w-[30%]">APPLICANT</th>
-                        <th className="py-4 w-[20%]">OPPORTUNITY</th>
-                        <th className="py-4 w-[10%]">SEX</th>
-                        <th className="py-4 w-[15%]">EXPERIENCE</th>
-                        <th className="py-4 w-[12%]">APPLIED</th>
-                        <th className="py-4 w-[13%]">STATUS</th>
-                        <th className="py-4 pr-6 text-right w-[10%]">ACTIONS</th>
+                        <th className="py-4 pl-6">APPLICANT</th>
+                        <th className="py-4">OPPORTUNITY</th>
+                        <th className="py-4">CONTACT</th>
+                        <th className="py-4">EXPERIENCE</th>
+                        <th className="py-4">APPLIED</th>
+                        <th className="py-4">STATUS</th>
+                        <th className="py-4 pr-6 text-right">ACTIONS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -3609,12 +3726,19 @@ export default function SatesoftApp() {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-5 text-sm text-slate-600">{applicant.opportunity}</td>
-                            <td className="py-5 text-sm text-slate-600">{applicant.sex}</td>
-                            <td className="py-5 text-sm text-slate-600">{applicant.experience}</td>
-                            <td className="py-5 text-sm text-slate-600">{applicant.appliedDate}</td>
-                            <td className="py-5 pr-2">
-                              <select
+                            <td className="py-5 text-sm text-slate-600">{applicant.opportunity || 'N/A'}</td>
+                            <td className="py-5">
+                              <div className="flex flex-col gap-1">
+                                <span className="text-sm text-slate-600">{applicant.email || 'No email'}</span>
+                                {applicant.phone && (
+                                  <span className="text-xs text-slate-400">{applicant.phone}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-5 text-sm text-slate-600">{applicant.experience || 'N/A'}</td>
+                             <td className="py-5 text-sm text-slate-600">{applicant.appliedDate}</td>
+                             <td className="py-5 pr-2">
+                               <select
                                 value={applicant.status}
                                 onChange={(e) => handleStatusChange(applicant.id, e.target.value)}
                                 className="text-xs font-bold px-2.5 py-1.5 rounded-lg border-0 cursor-pointer bg-blue-50 text-blue-700 transition-all duration-300 hover:bg-blue-100"
@@ -5251,6 +5375,14 @@ export default function SatesoftApp() {
                     <div className="text-sm text-slate-700 mt-1">{viewApplicant.sex || 'Not specified'}</div>
                   </div>
                   <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</label>
+                    <div className="text-sm text-slate-700 mt-1">{viewApplicant.phone || 'Not specified'}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</label>
+                    <div className="text-sm text-slate-700 mt-1">{viewApplicant.location || 'Not specified'}</div>
+                  </div>
+                  <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Experience</label>
                     <div className="text-sm text-slate-700 mt-1">{viewApplicant.experience || 'Not specified'}</div>
                   </div>
@@ -5259,6 +5391,20 @@ export default function SatesoftApp() {
                     <div className="text-sm text-slate-700 mt-1">{viewApplicant.appliedDate}</div>
                   </div>
                 </div>
+                {viewApplicant.cv_url && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">CV</label>
+                    <a 
+                      href={viewApplicant.cv_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="mt-1 flex items-center gap-2 text-sm text-[#72bf24] hover:text-[#62a71e] hover:underline"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 14l4-4v12a2 2 0 01-2 2H6a2 2 0 01-2-2z"></path></svg>
+                      {viewApplicant.cv_name || 'Download CV'}
+                    </a>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</label>
                   <div className="mt-1">

@@ -6,8 +6,11 @@ export default function Appheader() {
   const [scrolled, setScrolled] = useState(false);
   const [companyOpen, setCompanyOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
   const companyRef = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +25,9 @@ export default function Appheader() {
       if (companyRef.current && !companyRef.current.contains(e.target)) {
         setCompanyOpen(false);
       }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -30,6 +36,8 @@ export default function Appheader() {
   useEffect(() => {
     setCompanyOpen(false);
     setMobileOpen(false);
+    setSearchOpen(false);
+    setSearchQuery('');
   }, [location]);
 
   const toggleMobile = () => {
@@ -43,9 +51,10 @@ export default function Appheader() {
     { label: 'Services', path: '/services' },
     { label: 'Blog', path: '/blog' },
     { label: 'Opportunities', path: '/opportunities' },
-    { label: 'Contact', path: '/contact' },
     { label: 'Partners', path: '/partners' },
   ];
+
+  const contactLink = { label: 'Contact', path: '/contact' };
 
   const companyLinks = [
     { label: 'About Us', path: '/about' },
@@ -53,6 +62,11 @@ export default function Appheader() {
     { label: 'Testimonials', path: '/testimonials' },
     { label: 'Pricing', path: '/pricing' },
   ];
+
+  const searchLinks = [...navLinks, ...companyLinks, contactLink];
+  const searchResults = searchLinks.filter((link) =>
+    link.label.toLowerCase().includes(searchQuery.trim().toLowerCase())
+  );
 
   return (
     <header 
@@ -131,17 +145,53 @@ export default function Appheader() {
         <div className="container mx-auto px-8 md:px-12 lg:px-20">
           <div className="flex justify-between items-center">
             
-            {/* Logo */}
-            <div className="flex-shrink-0">
+            {/* Logo and site search */}
+            <div className="relative flex flex-shrink-0 flex-col items-start gap-5" ref={searchRef}>
               <Link to="/" className="flex items-center hover:opacity-80 transition-opacity duration-300">
                 <Logo textClassName="text-[#72bf24]" showText={true} size="md" />
               </Link>
+              <div className="flex w-52 items-center gap-2 rounded-lg border border-gray-200 bg-white/90 px-3 py-1.5 shadow-sm transition-colors focus-within:border-[#72bf24] sm:w-60">
+                <i className="bi bi-search text-sm text-[#72bf24]"></i>
+                <label htmlFor="site-search" className="sr-only">Search the site</label>
+                <input
+                  id="site-search"
+                  type="search"
+                  value={searchQuery}
+                  onFocus={() => setSearchOpen(true)}
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    setSearchOpen(true);
+                  }}
+                  placeholder="Search pages..."
+                  className="w-full bg-transparent text-xs text-gray-700 outline-none placeholder:text-gray-400"
+                />
+              </div>
+
+              {searchOpen && (
+                <div className="absolute left-0 top-full z-[70] mt-3 w-72 overflow-hidden rounded-xl border border-gray-100 bg-white p-3 shadow-2xl sm:w-80">
+                  <p className="px-1 pb-2 text-xs text-gray-500">Search available pages</p>
+                  <div className="max-h-56 overflow-y-auto">
+                    {searchResults.length ? searchResults.map((link) => (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        onClick={() => setSearchOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-[#72bf24]/5 hover:text-[#72bf24]"
+                      >
+                        {link.label}
+                      </Link>
+                    )) : (
+                      <p className="px-3 py-3 text-sm text-gray-500">No matching pages found.</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ==========================================================
                 DESKTOP MENU (Hidden on Mobile)
                 ========================================================== */}
-            <nav className="hidden lg:flex items-center space-x-8">
+            <nav className="ml-auto hidden lg:flex items-center space-x-8">
               {navLinks.map((link) => {
                 const isActive = link.path === '/' 
                   ? location.pathname === '/' 
@@ -150,40 +200,36 @@ export default function Appheader() {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`relative font-normal text-sm transition-all duration-300 group ${
-                      isActive ? 'text-[#72bf24]' : 'text-gray-600 hover:text-[#72bf24]'
+                    className={`font-normal text-sm transition-all duration-300 hover:font-bold ${
+                      isActive ? 'text-[#72bf24] font-bold' : 'text-gray-600 hover:text-[#72bf24]'
                     }`}
                   >
                     {link.label}
-                    <span className={`absolute left-0 bottom-0 h-0.5 bg-[#72bf24] transition-all duration-300 ${
-                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                    }`}></span>
                   </Link>
                 );
               })}
 
               {/* Company Dropdown */}
               <div className="relative group" ref={companyRef}>
-                <button
-                  type="button"
-                  onClick={() => setCompanyOpen((o) => !o)}
-                  aria-haspopup="true"
-                  aria-expanded={companyOpen}
-                  className={`relative font-normal text-sm transition-all duration-300 flex items-center gap-1 group ${
-                    location.pathname === '/about' || 
-                    location.pathname === '/board' || 
-                    location.pathname === '/pricing' || 
-                    location.pathname === '/testimonials'
-                      ? 'text-[#72bf24]' 
-                      : 'text-gray-600 hover:text-[#72bf24]'
-                  }`}
-                >
-                  Company
-                  <i className={`bi bi-chevron-down text-[10px] transition-transform duration-300 ${
-                    companyOpen ? 'rotate-180' : ''
-                  }`}></i>
-                  <span className="absolute left-0 bottom-0 h-0.5 bg-[#72bf24] transition-all duration-300 w-0 group-hover:w-full"></span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setCompanyOpen((o) => !o)}
+                    aria-haspopup="true"
+                    aria-expanded={companyOpen}
+                    className={`font-normal text-sm transition-all duration-300 flex items-center gap-1 hover:font-bold ${
+                      location.pathname === '/about' || 
+                      location.pathname === '/board' || 
+                      location.pathname === '/pricing' || 
+                      location.pathname === '/testimonials'
+                        ? 'text-[#72bf24] font-bold' 
+                        : 'text-gray-600 hover:text-[#72bf24]'
+                    }`}
+                  >
+                    Company
+                    <i className={`bi bi-chevron-down text-[10px] transition-transform duration-300 ${
+                      companyOpen ? 'rotate-180' : ''
+                    }`}></i>
+                  </button>
                 
                 {/* Dropdown Menu */}
                 <div 
@@ -213,21 +259,21 @@ export default function Appheader() {
                   </div>
                 </div>
               </div>
+
+              <Link
+                to={contactLink.path}
+                className={`font-normal text-sm transition-all duration-300 hover:font-bold ${
+                  location.pathname.startsWith(contactLink.path)
+                    ? 'text-[#72bf24] font-bold'
+                    : 'text-gray-600 hover:text-[#72bf24]'
+                }`}
+              >
+                {contactLink.label}
+              </Link>
             </nav>
 
-            {/* ==========================================================
-                CTA BUTTON & MOBILE TOGGLE
-                ========================================================== */}
-            <div className="flex items-center gap-4">
-              {/* Get A Quote Button */}
-              <Link 
-                to="/contact" 
-                className="hidden md:inline-flex items-center gap-2 bg-[#72bf24] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-[#62a71e] hover:shadow-lg transition-all duration-300 hover:scale-105"
-              >
-                <i className="bi bi-chat-dots"></i>
-                Get A Quote
-              </Link>
-              
+            {/* Mobile menu toggle */}
+            <div className="ml-2 flex items-center lg:hidden">
               {/* Mobile Toggle Button */}
               <button
                 onClick={toggleMobile}
@@ -270,6 +316,18 @@ export default function Appheader() {
                   </Link>
                 );
               })}
+
+              <Link
+                to={contactLink.path}
+                onClick={toggleMobile}
+                className={`relative font-normal text-sm transition-all duration-300 py-2.5 px-4 rounded-lg ${
+                  location.pathname.startsWith(contactLink.path)
+                    ? 'text-[#72bf24] bg-[#72bf24]/5'
+                    : 'text-gray-600 hover:text-[#72bf24] hover:bg-gray-50'
+                }`}
+              >
+                {contactLink.label}
+              </Link>
 
               {/* Company Links in Mobile */}
               <div className="mt-1 pt-2 border-t border-gray-100">

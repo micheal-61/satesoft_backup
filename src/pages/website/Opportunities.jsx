@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 
 const Opportunities = () => {
   const [jobs, setJobs] = useState([]);
@@ -170,9 +171,12 @@ const Opportunities = () => {
                   </div>
 
                   <div className="mt-auto pt-4 border-t border-border">
-                    <button onClick={() => setSelectedJob(job)} className="w-full py-3 bg-[#72bf24] hover:bg-[#62a71e] text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg text-sm tracking-wider uppercase">
-                      View Details
-                    </button>
+                    <Link
+                      to={`/opportunities/${job.id}`}
+                      className="block w-full rounded-xl bg-[#72bf24] py-3 text-center text-sm font-semibold uppercase tracking-wider text-white shadow-md transition-all duration-300 hover:bg-[#62a71e] hover:shadow-lg"
+                    >
+                      Learn More
+                    </Link>
                   </div>
                 </div>
               </div>
