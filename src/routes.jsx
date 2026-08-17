@@ -33,6 +33,7 @@ import BlogDetails from "./pages/website/BlogDetails";
 import Environmental from "./pages/website/Environmental";
 import PrivacyPolicy from "./pages/website/PrivacyPolicy";
 import ServiceAgreement from "./pages/website/ServiceAgreement";
+import Support from "./pages/website/Support";
 
 // --- Admin CMS ---
 import RaincloudDashboard from "./pages/admin/RaincloudDashboard";
@@ -113,10 +114,11 @@ export const routesConfig = [
       { path: "products/karibyshoo", element: <ProductDetailsKaribyshoo /> },
       { path: "products/founddocument", element: <ProductDetailsFoundDocument /> },
       { path: "products/:id", element: <ProductDetails /> },
-      { path: "blog/:slug", element: <BlogDetails /> },
+      { path: "blog/:id", element: <BlogDetails /> },
       { path: "environmental", element: <Environmental /> },
       { path: "privacy-policy", element: <PrivacyPolicy /> },
       { path: "service-agreement", element: <ServiceAgreement /> },
+      { path: "support", element: <Support /> },
     ],
   },
 

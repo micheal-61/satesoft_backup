@@ -86,6 +86,17 @@ export default function SatesoftApp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const resolveImageUrl = (url) => {
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+    if (/^file:\/\//i.test(trimmed)) return '';
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    if (trimmed.startsWith('/')) return trimmed;
+    if (trimmed.startsWith('data:')) return trimmed;
+    return '/' + trimmed;
+  };
+
   const apiFetch = async (endpoint, options = {}) => {
     try {
       const response = await axios({
@@ -96,6 +107,9 @@ export default function SatesoftApp() {
           ...(token ? { Authorization: 'Bearer ' + token } : {}),
         },
       });
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('HTTP ' + response.status + ' for ' + endpoint);
+      }
       return response.data;
     } catch (err) {
       console.error('API error [' + (options.method || 'GET') + ' ' + endpoint + ']:', err);
@@ -103,34 +117,74 @@ export default function SatesoftApp() {
     }
   };
 
+  const handleClearArticleComments = async (article) => {
+    const articleTitle = (newsPosts || []).find((n) => n.id === article.articleId)?.title || 'this article';
+    if (!window.confirm(`Clear all comments for "${articleTitle}"? This cannot be undone.`)) return;
+    
+    console.log('Clearing comments for article:', article.articleId);
+    
+    try {
+      const deleteResult = await apiFetch(`/comments/article/${article.articleId}`, { method: 'DELETE' });
+      console.log('Delete result:', deleteResult);
+      
+      const updatedData = await apiFetch('/comments/by-article');
+      console.log('Updated comments data:', updatedData);
+      setViewStatsDetail((prev) => ({
+        ...prev,
+        data: updatedData,
+      }));
+      
+      try {
+        localStorage.setItem('satesoft_comments_cleared', JSON.stringify({ articleId: article.articleId, timestamp: Date.now() }));
+      } catch {}
+
+      await fetchDashboardData();
+      console.log('Dashboard data refreshed');
+    } catch (err) {
+      console.error('Failed to clear comments:', err);
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to clear comments. Please try again.';
+      alert(errorMessage);
+    }
+  };
+
   const fetchDashboardData = async () => {
+    console.log('fetchDashboardData started');
     setLoading(true);
     setError(null);
     try {
-      const [statsData, emails, applicantsData, productsData, partnersData, advisorsData, jobsData, newsData, serviceAgreementsData, jurisdictionsData, contactsData, pricingData, privacyPoliciesData, servicesData] = await Promise.all([
-        apiFetch('/stats').catch(() => []),
-        apiFetch('/messages').catch(() => []),
-        apiFetch('/applicants').catch(() => []),
-        apiFetch('/products').catch(() => []),
-        apiFetch('/partners').catch(() => []),
-        apiFetch('/advisors').catch(() => []),
-        apiFetch('/jobs').catch(() => []),
-        apiFetch('/news').catch(() => []),
-        apiFetch('/service-agreements').catch(() => []),
-        apiFetch('/jurisdictions').catch(() => []),
-        apiFetch('/contacts').catch(() => []),
-        apiFetch('/pricing').catch(() => []),
-        apiFetch('/privacy-policies').catch(() => []),
-        apiFetch('/services').catch(() => []),
+      console.log('Fetching API data...');
+      const [statsData, emails, applicantsData, productsData, partnersData, advisorsData, jobsData, newsData, serviceAgreementsData, jurisdictionsData, contactsData, pricingData, privacyPoliciesData, servicesData, subscribersCount] = await Promise.all([
+        apiFetch('/stats').catch((err) => { console.error('stats error', err); return []; }),
+        apiFetch('/messages').catch((err) => { console.error('messages error', err); return []; }),
+        apiFetch('/applicants').catch((err) => { console.error('applicants error', err); return []; }),
+        apiFetch('/products').catch((err) => { console.error('products error', err); return []; }),
+        apiFetch('/partners').catch((err) => { console.error('partners error', err); return []; }),
+        apiFetch('/advisors').catch((err) => { console.error('advisors error', err); return []; }),
+        apiFetch('/jobs').catch((err) => { console.error('jobs error', err); return []; }),
+        apiFetch('/news').catch((err) => { console.error('news error', err); return []; }),
+        apiFetch('/service-agreements').catch((err) => { console.error('service-agreements error', err); return []; }),
+        apiFetch('/jurisdictions').catch((err) => { console.error('jurisdictions error', err); return []; }),
+        apiFetch('/contacts').catch((err) => { console.error('contacts error', err); return []; }),
+        apiFetch('/pricing').catch((err) => { console.error('pricing error', err); return []; }),
+        apiFetch('/privacy-policies').catch((err) => { console.error('privacy-policies error', err); return []; }),
+        apiFetch('/services').catch((err) => { console.error('services error', err); return []; }),
+        apiFetch('/subscribers/count').catch((err) => { console.error('subscribers count error', err); return { count: 0 }; }),
       ]);
+      console.log('API data fetched:', { statsData, newsData, subscribersCount });
+
+      let commentsByArticleData = [];
+      try {
+        commentsByArticleData = await apiFetch('/comments/by-article');
+        console.log('comments/by-article raw:', commentsByArticleData);
+      } catch (err) {
+        console.error('comments/by-article fetch error:', err);
+      }
 
       const statsMap = {
-        'New Visits': 'newVisits',
-        'Total Visits': 'totalVisits',
-        'Downloads': 'downloads',
-        'Direct Chat': 'directChat',
+        'Comments': 'comments',
+        'Views': 'views',
       };
-      const mappedStats = { newVisits: 0, totalVisits: 0, downloads: 0, directChat: 0 };
+      const mappedStats = { comments: 0, views: 0, subscribers: subscribersCount.count || 0 };
       let statsMatched = false;
       statsData.forEach((item) => {
         const key = statsMap[item.title];
@@ -140,15 +194,25 @@ export default function SatesoftApp() {
         }
       });
       if (!statsMatched && statsData.length > 0) {
-        const fallbackKeys = Object.keys(mappedStats);
-        statsData.slice(0, 4).forEach((item, idx) => {
+        const fallbackKeys = ['comments', 'views'];
+        statsData.slice(0, 2).forEach((item, idx) => {
           if (fallbackKeys[idx]) {
             mappedStats[fallbackKeys[idx]] = Number(item.value) || 0;
           }
         });
       }
+      
+      const totalComments = (commentsByArticleData || []).reduce((sum, article) => sum + (article.totalComments || 0), 0);
+      mappedStats.comments = totalComments;
+      
+      const totalViews = (newsData || []).reduce((sum, article) => sum + (article.views || 0), 0);
+      mappedStats.views = totalViews;
+      
+      console.log('Dashboard data:', { commentsByArticleData, totalComments, totalViews, newsData, subscribersCount });
+      
       setStats(mappedStats);
       setEmails(emails);
+      console.log('setStats called with:', mappedStats);
 
       const oppCounts = {};
       applicantsData.forEach((a) => {
@@ -222,6 +286,43 @@ export default function SatesoftApp() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+      fetchDashboardData();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'dashboard') return;
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('dashboard-refresh event received, activeTab:', activeTab);
+      if (activeTab === 'dashboard') {
+        console.log('Refreshing dashboard data...');
+        fetchDashboardData();
+      }
+    };
+    window.addEventListener('dashboard-refresh', handleRefresh);
+    return () => window.removeEventListener('dashboard-refresh', handleRefresh);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleStorageRefresh = (e) => {
+      if (e.key === 'satesoft_dashboard_refresh' && activeTab === 'dashboard') {
+        console.log('Storage refresh detected, refreshing dashboard...');
+        fetchDashboardData();
+      }
+    };
+    window.addEventListener('storage', handleStorageRefresh);
+    return () => window.removeEventListener('storage', handleStorageRefresh);
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === 'dashboard') {
@@ -941,6 +1042,7 @@ export default function SatesoftApp() {
   const [viewAdvisor, setViewAdvisor] = useState(null);
   const [advisorFormData, setAdvisorFormData] = useState({
     name: '',
+    lastName: '',
     email: '',
     contact: '',
     linkedIn: '',
@@ -958,6 +1060,7 @@ export default function SatesoftApp() {
     setSelectedAdvisor(null);
     setAdvisorFormData({
       name: '',
+      lastName: '',
       email: '',
       contact: '',
       linkedIn: '',
@@ -978,8 +1081,12 @@ export default function SatesoftApp() {
   const handleOpenEditAdvisor = (advisor) => {
     setAdvisorModalMode('edit');
     setSelectedAdvisor(advisor);
+    const nameParts = advisor.name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
     setAdvisorFormData({
-      name: advisor.name,
+      name: firstName,
+      lastName: lastName,
       email: advisor.email || '',
       contact: advisor.contact || '',
       linkedIn: advisor.linkedIn || '',
@@ -1027,14 +1134,12 @@ export default function SatesoftApp() {
     setAdvisorError('');
     setAdvisorSaving(true);
     try {
-      const nameParts = advisorFormData.name.trim();
-      const namePartsArr = nameParts ? nameParts.split(' ') : [];
-      const firstName = namePartsArr[0] || '';
-      const lastName = namePartsArr.slice(1).join(' ') || '';
+      const firstName = advisorFormData.name.trim() || '';
+      const lastName = advisorFormData.lastName.trim() || '';
       const role = advisorFormData.role.trim() || 'Advisor';
       
       if (!firstName) {
-        setAdvisorError('Please enter a valid name.');
+        setAdvisorError('Please enter a first name.');
         setAdvisorSaving(false);
         return;
       }
@@ -1132,7 +1237,8 @@ export default function SatesoftApp() {
     author: '',
     date: new Date().toISOString().split('T')[0],
     excerpt: '',
-    content: ''
+    content: '',
+    imageUrl: ''
   });
 
   const handleOpenAddNews = () => {
@@ -1144,7 +1250,8 @@ export default function SatesoftApp() {
       author: '',
       date: new Date().toISOString().split('T')[0],
       excerpt: '',
-      content: ''
+      content: '',
+      imageUrl: ''
     });
     setIsNewsModalOpen(true);
   };
@@ -1158,7 +1265,8 @@ export default function SatesoftApp() {
       author: post.author || '',
       date: post.date || new Date().toISOString().split('T')[0],
       excerpt: post.excerpt || '',
-      content: post.content || ''
+      content: post.content || '',
+      imageUrl: post.imageUrl || ''
     });
     setIsNewsModalOpen(true);
   };
@@ -1656,7 +1764,7 @@ export default function SatesoftApp() {
           data: {
             plan: pricingFormData.plan,
             price: parseFloat(pricingFormData.price) || 0,
-            features: featuresArray,
+            features: JSON.stringify(featuresArray),
             popular: pricingFormData.popular,
             display_order: pricingFormData.display_order
           },
@@ -1668,7 +1776,7 @@ export default function SatesoftApp() {
           data: {
             plan: pricingFormData.plan,
             price: parseFloat(pricingFormData.price) || 0,
-            features: featuresArray,
+            features: JSON.stringify(featuresArray),
             popular: pricingFormData.popular,
             display_order: pricingFormData.display_order
           },
@@ -1823,56 +1931,12 @@ export default function SatesoftApp() {
   const totalMailbox = mailboxData.reduce((sum, item) => sum + item.value, 0);
 
   const [stats, setStats] = useState({
-    newVisits: 0,
-    totalVisits: 0,
-    downloads: 0,
-    directChat: 0
+    comments: 0,
+    views: 0,
+    subscribers: 0
   });
 
-  useEffect(() => {
-    if (activeTab === 'dashboard') {
-      const targetStats = {
-        newVisits: 450,
-        totalVisits: 15489,
-        downloads: 55005,
-        directChat: 13921
-      };
-      
-      let currentStats = { newVisits: 0, totalVisits: 0, downloads: 0, directChat: 0 };
-      const duration = 1500;
-      const steps = 60;
-      const increment = {
-        newVisits: targetStats.newVisits / steps,
-        totalVisits: targetStats.totalVisits / steps,
-        downloads: targetStats.downloads / steps,
-        directChat: targetStats.directChat / steps
-      };
-      
-      let step = 0;
-      const interval = setInterval(() => {
-        step++;
-        if (step >= steps) {
-          setStats(targetStats);
-          clearInterval(interval);
-        } else {
-          setStats({
-            newVisits: Math.round(currentStats.newVisits + increment.newVisits),
-            totalVisits: Math.round(currentStats.totalVisits + increment.totalVisits),
-            downloads: Math.round(currentStats.downloads + increment.downloads),
-            directChat: Math.round(currentStats.directChat + increment.directChat)
-          });
-          currentStats = {
-            newVisits: currentStats.newVisits + increment.newVisits,
-            totalVisits: currentStats.totalVisits + increment.totalVisits,
-            downloads: currentStats.downloads + increment.downloads,
-            directChat: currentStats.directChat + increment.directChat
-          };
-        }
-      }, duration / steps);
-      
-      return () => clearInterval(interval);
-    }
-  }, [activeTab]);
+  const [viewStatsDetail, setViewStatsDetail] = useState(null);
 
   useEffect(() => {
     if (activeTab === 'legal-service-agreement') {
@@ -1913,7 +1977,7 @@ export default function SatesoftApp() {
         <div className="h-[calc(100vh-140px)] flex flex-col">
           <div className="flex items-center justify-between mb-4 shrink-0">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Service Agreement</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Service Agreement</h1>
               <p className="text-sm text-slate-500 mt-1">Manage service agreement sections and content</p>
             </div>
             <button
@@ -1939,7 +2003,7 @@ export default function SatesoftApp() {
                         className="flex-1 min-w-0 text-left cursor-pointer group"
                         title="View full agreement"
                       >
-                        <h3 className="font-bold text-slate-900 text-sm group-hover:text-[#72bf24] transition-colors truncate">{agreement.title}</h3>
+                        <h3 className="text-sm font-semibold text-slate-900 group-hover:text-[#72bf24] transition-colors truncate">{agreement.title}</h3>
                         <p className="text-xs text-slate-400 mt-0.5">
                           {new Date(agreement.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                         </p>
@@ -2008,7 +2072,7 @@ export default function SatesoftApp() {
         <div className="h-[calc(100vh-140px)] flex flex-col">
           <div className="flex items-center justify-between mb-4 shrink-0">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Jurisdictions</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Jurisdictions</h1>
               <p className="text-sm text-slate-500 mt-1">Manage jurisdiction information</p>
             </div>
             <button
@@ -2024,7 +2088,7 @@ export default function SatesoftApp() {
             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 tracking-wider">
+                  <tr className="border-b border-slate-100 text-xs font-semibold text-slate-400 tracking-wider">
                     <th className="py-4 pl-6">COUNTRY</th>
                     <th className="py-4">ENTITY TYPE</th>
                     <th className="py-4">LEAD ENTITY</th>
@@ -2097,7 +2161,7 @@ export default function SatesoftApp() {
       const ContactTable = ({ contacts: sectionContacts, columns, emptyText }) => (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col max-h-[45vh]">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
-            <h3 className="text-sm font-bold text-slate-900">{emptyText}</h3>
+            <h3 className="text-sm font-semibold text-slate-900">{emptyText}</h3>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             <table className="w-full text-left border-collapse">
@@ -2144,7 +2208,7 @@ export default function SatesoftApp() {
         <div className="h-[calc(100vh-140px)] flex flex-col">
           <div className="flex items-center justify-between mb-4 shrink-0">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Contact Information Management</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Contact Information Management</h1>
               <p className="text-sm text-slate-500 mt-1">Manage company contact details and social media links</p>
             </div>
             <button
@@ -2211,7 +2275,7 @@ export default function SatesoftApp() {
         <div className="h-[calc(100vh-140px)] flex flex-col">
           <div className="flex items-center justify-between mb-4 shrink-0">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Privacy Policy</h1>
+              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Privacy Policy</h1>
               <p className="text-sm text-slate-500 mt-1">Manage privacy policy content</p>
             </div>
             <button
@@ -2227,7 +2291,7 @@ export default function SatesoftApp() {
             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-[#f8fafc]">
-                  <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                  <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                     <th className="py-4 pl-6">TITLE</th>
                     <th className="py-4">CREATED</th>
                     <th className="py-4 pr-6 text-right">ACTIONS</th>
@@ -2244,7 +2308,7 @@ export default function SatesoftApp() {
                             </div>
                             <button
                               onClick={() => handleViewPrivacyPolicy(policy)}
-                              className="font-bold text-slate-900 text-base text-left hover:text-[#72bf24] transition-colors cursor-pointer"
+                              className="font-semibold text-slate-900 text-base text-left hover:text-[#72bf24] transition-colors cursor-pointer"
                               title="View privacy policy"
                             >
                               {policy.title}
@@ -2310,7 +2374,7 @@ export default function SatesoftApp() {
       <div className="h-[calc(100vh-140px)] flex flex-col">
         <div className="flex items-center justify-between mb-4 shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{meta.title}</h1>
+            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">{meta.title}</h1>
             <p className="text-sm text-slate-500 mt-1">Manage {meta.title.toLowerCase()} information</p>
           </div>
           <button className="bg-[#72bf24] hover:bg-[#62a71e] text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
@@ -2323,7 +2387,7 @@ export default function SatesoftApp() {
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 tracking-wider">
+                <tr className="border-b border-slate-100 text-xs font-semibold text-slate-400 tracking-wider">
                   {Object.keys(data[0] || {}).filter(key => key !== 'id').map((key) => (
                     <th key={key} className="pb-4 pl-2 uppercase">{key.replace(/-/g, ' ')}</th>
                   ))}
@@ -2435,10 +2499,26 @@ export default function SatesoftApp() {
           transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
         }
         .nav-item-icon {
-          transition: transform 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 0.375rem;
+          background: #F5F5F5;
+          transition: transform 0.2s ease, background 0.2s ease;
+          padding: 0;
         }
         button:hover .nav-item-icon {
           transform: scale(1.08);
+          background: #e2e8f0;
+        }
+        button.bg-\\[\\#72bf24\\] .nav-item-icon,
+        button:hover .nav-item-icon {
+          background: #e2e8f0;
+        }
+        button.bg-\\[\\#72bf24\\] .nav-item-icon {
+          background: rgba(255, 255, 255, 0.2);
         }
 
         .admin-dark-mode {
@@ -2562,14 +2642,14 @@ export default function SatesoftApp() {
         .admin-app .admin-sidebar {
           box-shadow: 18px 0 45px rgba(15, 23, 42, 0.035);
         }
-        .admin-app > .fixed.inset-0:has(form) {
+        .admin-app .fixed.inset-0:has(.bg-white) {
           align-items: stretch;
           justify-content: stretch;
           padding: 0;
           background: #f8fafc;
           backdrop-filter: none;
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white {
           width: 100%;
           max-width: none;
           min-height: 100vh;
@@ -2585,46 +2665,58 @@ export default function SatesoftApp() {
             #ffffff;
           animation: adminFormEnter 360ms cubic-bezier(.16, 1, .3, 1) both;
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white > :first-child {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:first-child {
           max-width: 940px;
           margin-left: auto;
           margin-right: auto;
           padding-bottom: 1.5rem;
           border-bottom: 1px solid #e2e8f0;
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white > :first-child h3 {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:first-child h3 {
           font-size: clamp(1.5rem, 2vw, 2rem);
           letter-spacing: -0.035em;
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:first-child button {
+          transition: transform 0.3s ease;
+        }
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:first-child button:hover {
+          transform: rotate(90deg);
+        }
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) {
           max-width: 940px;
-          margin: 2rem auto 0;
-          padding: clamp(1.25rem, 3vw, 2.25rem);
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) .space-y-4,
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > .space-y-4,
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) > div {
+          background: rgba(255, 255, 255, 0.92);
           border: 1px solid #e2e8f0;
           border-radius: 1.25rem;
-          background: rgba(255, 255, 255, 0.92);
+          padding: clamp(1.25rem, 3vw, 2.25rem);
           box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form label {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) .space-y-4 label,
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) .text-xs.font-semibold {
           color: #334155;
           font-size: 0.75rem;
           letter-spacing: 0.025em;
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form input,
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form select,
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form textarea {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) input,
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) textarea,
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) select {
           border-color: #dbe4ee;
           background: #fbfdff;
           padding: 0.7rem 0.9rem;
           box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.025);
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form input:focus,
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form select:focus,
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form textarea:focus {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) input:focus,
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) textarea:focus,
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white > div:not(:first-child) select:focus {
           border-color: #72bf24;
           box-shadow: 0 0 0 4px rgba(114, 191, 36, 0.13);
         }
-        .admin-app > .fixed.inset-0:has(form) > .bg-white form > .flex:last-child {
+        .admin-app .fixed.inset-0:has(.bg-white) > .bg-white form > .flex:last-child {
           position: sticky;
           bottom: -2.25rem;
           margin: 1.75rem -2.25rem -2.25rem;
@@ -2638,44 +2730,44 @@ export default function SatesoftApp() {
           to { opacity: 1; transform: translateY(0); }
         }
         @media (min-width: 768px) {
-          .admin-app > .fixed.inset-0:has(form) > .bg-white form {
+          .admin-app .fixed.inset-0:has(.bg-white) > .bg-white form {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             column-gap: 1.5rem;
           }
-          .admin-app > .fixed.inset-0:has(form) > .bg-white form > :nth-last-child(2),
-          .admin-app > .fixed.inset-0:has(form) > .bg-white form > :last-child {
+          .admin-app .fixed.inset-0:has(.bg-white) > .bg-white form > :nth-last-child(2),
+          .admin-app .fixed.inset-0:has(.bg-white) > .bg-white form > :last-child {
             grid-column: 1 / -1;
           }
         }
         @media (max-width: 767px) {
-          .admin-app > .fixed.inset-0:has(form) > .bg-white form > .flex:last-child {
+          .admin-app .fixed.inset-0:has(.bg-white) > .bg-white form > .flex:last-child {
             bottom: -1.25rem;
             margin: 1.25rem -1.25rem -1.25rem;
             padding: 1rem 1.25rem;
           }
         }
       `}</style>
-      <div className={`admin-app flex h-screen bg-slate-50/50 text-slate-800 font-sans antialiased overflow-hidden backdrop-blur-sm ${darkMode ? 'admin-dark-mode' : ''}`}>
+      <div className={`admin-app flex h-screen bg-slate-50/50 text-slate-800 font-sans antialiased overflow-hidden backdrop-blur-sm ${darkMode ? 'admin-dark-mode' : ''}`} style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
         {/* Sidebar Navigation */}
         <aside className="w-72 bg-white/95 border-r border-slate-200/80 flex flex-col p-8 gap-5 shrink-0 backdrop-blur-xl relative admin-sidebar">
           {/* Vertical nav indicator line */}
           <div className="absolute left-[22px] top-24 bottom-20 w-[2px] bg-slate-300/80 rounded-full"></div>
 
-          <div className="text-2xl font-extrabold tracking-wide px-2 py-2 select-none transition-transform duration-300 hover:scale-[1.02]">
+           <div className="text-2xl font-semibold tracking-wide px-2 py-2 select-none transition-transform duration-300 hover:scale-[1.02]">
             <Logo textClassName="text-[#72bf24]" showText={true} />
           </div>
 
-          <nav className="flex-1 overflow-y-auto flex flex-col gap-1 text-[15px] font-semibold custom-scrollbar relative">
+           <nav className="flex-1 overflow-y-auto flex flex-col gap-1 text-[13px] font-medium custom-scrollbar relative">
             {/* Dashboard Tab */}
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+              className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                 activeTab === 'dashboard' ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20' : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
               }`}
             >
               <div className="flex items-center gap-3">
-                <LayoutGrid className="w-5 h-5 relative z-10 nav-item-icon" />
+                <LayoutGrid className="w-4 h-4 relative z-10 nav-item-icon" />
                 <span>Dashboard</span>
               </div>
             </button>
@@ -2684,14 +2776,14 @@ export default function SatesoftApp() {
             <div>
               <button
                 onClick={() => toggleAccordion('products')}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                   activeTab === 'products' || activeTab === 'pricing'
                     ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20'
                     : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Box className="w-5 h-5 relative z-10 nav-item-icon" />
+                  <Box className="w-4 h-4 relative z-10 nav-item-icon" />
                   <span>Products</span>
                 </div>
                 {openAccordions.products ? <ChevronUp className="w-5 h-5 relative z-10 transition-transform duration-300" /> : <ChevronDown className="w-5 h-5 text-slate-400 relative z-10 transition-transform duration-300" />}
@@ -2723,14 +2815,14 @@ export default function SatesoftApp() {
             <div>
               <button
                 onClick={() => toggleAccordion('services')}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                   activeTab === 'services'
                     ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20'
                     : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Box className="w-5 h-5 relative z-10 nav-item-icon" />
+                  <Box className="w-4 h-4 relative z-10 nav-item-icon" />
                   <span>Services</span>
                 </div>
                 {openAccordions.services ? <ChevronUp className="w-5 h-5 relative z-10 transition-transform duration-300" /> : <ChevronDown className="w-5 h-5 text-slate-400 relative z-10 transition-transform duration-300" />}
@@ -2754,14 +2846,14 @@ export default function SatesoftApp() {
             <div>
               <button
                 onClick={() => toggleAccordion('opportunityMgt')}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                   activeTab === 'opportunities' || activeTab === 'applicants'
                     ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20'
                     : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <ShoppingBag className="w-5 h-5 nav-item-icon" />
+                  <ShoppingBag className="w-4 h-4 nav-item-icon" />
                   <span>Opportunity Mgt</span>
                 </div>
                 {openAccordions.opportunityMgt ? <ChevronUp className="w-5 h-5 relative z-10 transition-transform duration-300" /> : <ChevronDown className="w-5 h-5 text-slate-400 relative z-10 transition-transform duration-300" />}
@@ -2796,12 +2888,12 @@ export default function SatesoftApp() {
                   toggleAccordion('partner');
                   setActiveTab('partner-list');
                 }}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                   activeTab === 'partner-list' ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20' : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 nav-item-icon" />
+                  <Users className="w-4 h-4 nav-item-icon" />
                   <span>Partner Management</span>
                 </div>
                 {openAccordions.partner ? <ChevronUp className="w-5 h-5 relative z-10 transition-transform duration-300" /> : <ChevronDown className="w-5 h-5 text-slate-400 relative z-10 transition-transform duration-300" />}
@@ -2824,12 +2916,12 @@ export default function SatesoftApp() {
             {/* Mailbox */}
             <button
               onClick={() => setActiveTab('mailbox')}
-              className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+              className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                 activeTab === 'mailbox' ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20' : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 nav-item-icon" />
+                <Mail className="w-4 h-4 nav-item-icon" />
                 <span>Mailbox</span>
               </div>
               <span className="bg-[#eaf6de] text-[#5b9b1d] text-xs px-2.5 py-1 rounded-full font-bold transition-all duration-300 hover:scale-105">
@@ -2844,7 +2936,7 @@ export default function SatesoftApp() {
                 activeTab === 'news' ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20' : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
               }`}
             >
-              <Newspaper className="w-5 h-5 relative z-10 nav-item-icon" />
+              <Newspaper className="w-4 h-4 relative z-10 nav-item-icon" />
               <span>Company News</span>
             </button>
 
@@ -2852,14 +2944,14 @@ export default function SatesoftApp() {
             <div>
               <button
                 onClick={() => toggleAccordion('corporateMgt')}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                   activeTab === 'board-of-advisors' 
                     ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20' 
                     : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Building2 className="w-5 h-5 relative z-10 nav-item-icon" />
+                  <Building2 className="w-4 h-4 relative z-10 nav-item-icon" />
                   <span>Corporate Mgt</span>
                 </div>
                 {openAccordions.corporateMgt ? <ChevronUp className="w-5 h-5 relative z-10 transition-transform duration-300" /> : <ChevronDown className="w-5 h-5 text-slate-400 relative z-10 transition-transform duration-300" />}
@@ -2883,14 +2975,14 @@ export default function SatesoftApp() {
             <div>
               <button
                 onClick={() => toggleAccordion('legalMgt')}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                   activeTab.startsWith('legal-') 
                     ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20' 
                     : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-5 h-5 relative z-10 nav-item-icon" />
+                  <ShieldCheck className="w-4 h-4 relative z-10 nav-item-icon" />
                   <span>Legal & Compliance</span>
                 </div>
                 {openAccordions.legalMgt ? <ChevronUp className="w-5 h-5 relative z-10 transition-transform duration-300" /> : <ChevronDown className="w-5 h-5 text-slate-400 relative z-10 transition-transform duration-300" />}
@@ -2949,14 +3041,14 @@ export default function SatesoftApp() {
             <div>
               <button
                 onClick={() => toggleAccordion('settings')}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
+                className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 w-full text-left cursor-pointer relative z-10 ${
                   activeTab === 'settings' || activeTab === 'manage-account'
                     ? 'bg-[#72bf24] text-white shadow-md shadow-[#72bf24]/20'
                     : 'text-slate-600 hover:bg-slate-100 hover:translate-x-0.5'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Settings className="w-5 h-5 relative z-10 nav-item-icon" />
+                  <Settings className="w-4 h-4 relative z-10 nav-item-icon" />
                   <span>Settings</span>
                 </div>
                 {openAccordions.settings ? <ChevronUp className="w-5 h-5 relative z-10 transition-transform duration-300" /> : <ChevronDown className="w-5 h-5 text-slate-400 relative z-10 transition-transform duration-300" />}
@@ -2997,7 +3089,7 @@ export default function SatesoftApp() {
               }}
               className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 w-full text-left cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 mt-2 relative z-10"
             >
-              <LogOut className="w-5 h-5 relative z-10 nav-item-icon" />
+              <LogOut className="w-4 h-4 relative z-10 nav-item-icon" />
               <span>Logout</span>
             </button>
           </nav>
@@ -3021,10 +3113,10 @@ export default function SatesoftApp() {
 
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <div className="text-sm font-bold text-slate-900">Admin User</div>
-                  <div className="text-[11px] font-black text-[#72bf24] tracking-wider">SUPER ADMIN</div>
+                  <div className="text-sm font-semibold text-slate-900">Admin User</div>
+                  <div className="text-[11px] font-bold text-[#72bf24] tracking-wider">SUPER ADMIN</div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-[#e8f5e9] text-[#72bf24] font-bold text-sm flex items-center justify-center border border-[#72bf24]/20 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-md">
+                <div className="w-10 h-10 rounded-full bg-[#e8f5e9] text-[#72bf24] font-semibold text-sm flex items-center justify-center border border-[#72bf24]/20 shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-md">
                   AD
                 </div>
               </div>
@@ -3035,7 +3127,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Overview</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">System Overview</h1>
                     <p className="text-sm text-slate-500 mt-1">Real-time metrics and operational insights</p>
                   </div>
                   <div className="flex gap-2">
@@ -3045,77 +3137,67 @@ export default function SatesoftApp() {
                   </div>
                 </div>
 
-                {/* Stat Cards Grid with Dynamic Numbers */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                {/* Stat Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer" onClick={async () => {
+                    console.log('Comments card clicked');
+                    const data = await apiFetch('/comments/by-article').catch(() => []);
+                    console.log('Comments data fetched:', data);
+                    setViewStatsDetail({ type: 'comments', data });
+                  }}>
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">New Visits</span>
-                        <h3 className="text-2xl font-extrabold text-slate-900 mt-1.5 transition-all duration-700">
-                          {stats.newVisits.toLocaleString()}
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Comments</span>
+                        <h3 className="text-xl font-bold text-slate-900 mt-1 transition-all duration-700">
+                          {stats.comments.toLocaleString()}
                         </h3>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center transition-all duration-300 hover:scale-110">
-                        <UserPlus className="w-5 h-5 text-[#72bf24]" />
+                      <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center transition-all duration-300 hover:scale-110">
+                        <MessageCircle className="w-4 h-4 text-amber-600" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 mt-4 text-xs font-bold text-emerald-600">
-                      <ArrowUpRight className="w-4 h-4" />
-                      <span>45% Increase</span>
+                    <div className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-amber-600">
+                      <span>View by article</span>
                     </div>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer" onClick={async () => {
+                    const data = await apiFetch('/news').catch(() => []);
+                    setViewStatsDetail({ type: 'views', data });
+                  }}>
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Visits</span>
-                        <h3 className="text-2xl font-extrabold text-slate-900 mt-1.5 transition-all duration-700">
-                          {stats.totalVisits.toLocaleString()}
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Views</span>
+                        <h3 className="text-xl font-bold text-slate-900 mt-1 transition-all duration-700">
+                          {stats.views.toLocaleString()}
                         </h3>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center transition-all duration-300 hover:scale-110">
-                        <Activity className="w-5 h-5 text-blue-600" />
+                      <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center transition-all duration-300 hover:scale-110">
+                        <Eye className="w-4 h-4 text-rose-600" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 mt-4 text-xs font-bold text-blue-600">
-                      <ArrowUpRight className="w-4 h-4" />
-                      <span>40% Increase</span>
+                    <div className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-rose-600">
+                      <span>View per post</span>
                     </div>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer" onClick={async () => {
+                    const data = await apiFetch('/subscribers').catch(() => []);
+                    setViewStatsDetail({ type: 'subscribers', data });
+                  }}>
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Downloads</span>
-                        <h3 className="text-2xl font-extrabold text-slate-900 mt-1.5 transition-all duration-700">
-                          {stats.downloads.toLocaleString()}
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Subscribers</span>
+                        <h3 className="text-xl font-bold text-slate-900 mt-1 transition-all duration-700">
+                          {stats.subscribers.toLocaleString()}
                         </h3>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center transition-all duration-300 hover:scale-110">
-                        <Download className="w-5 h-5 text-purple-600" />
+                      <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center transition-all duration-300 hover:scale-110">
+                        <Mail className="w-4 h-4 text-teal-600" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 mt-4 text-xs font-bold text-purple-600">
-                      <ArrowUpRight className="w-4 h-4" />
-                      <span>85% Increase</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Direct Chat</span>
-                        <h3 className="text-2xl font-extrabold text-slate-900 mt-1.5 transition-all duration-700">
-                          {stats.directChat.toLocaleString()}
-                        </h3>
-                      </div>
-                      <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center transition-all duration-300 hover:scale-110">
-                        <MessageCircle className="w-5 h-5 text-amber-600" />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 mt-4 text-xs font-bold text-amber-600">
-                      <ArrowUpRight className="w-4 h-4" />
-                      <span>50% Increase</span>
+                    <div className="flex items-center gap-1 mt-2 text-[11px] font-semibold text-teal-600">
+                      <span>View all emails</span>
                     </div>
                   </div>
                 </div>
@@ -3123,7 +3205,7 @@ export default function SatesoftApp() {
                 {/* Mailbox Status with Pie Chart & Applicants per Opportunity */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm transition-all duration-300 hover:shadow-md">
-                    <h3 className="text-sm font-bold text-slate-900 mb-4">Mailbox Status</h3>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-4">Mailbox Status</h3>
                     <div className="flex items-center justify-center mb-4">
                       <div className="relative w-44 h-44">
                         <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
@@ -3188,7 +3270,7 @@ export default function SatesoftApp() {
                   </div>
 
                   <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm transition-all duration-300 hover:shadow-md">
-                    <h3 className="text-sm font-bold text-slate-900 mb-4">Opportunities Overview</h3>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-4">Opportunities Overview</h3>
                     <div className="space-y-4">
                       {jobOpportunities.length > 0 ? (
                         jobOpportunities.map((job) => {
@@ -3198,7 +3280,7 @@ export default function SatesoftApp() {
                             <div key={job.id}>
                               <div className="flex justify-between items-center mb-1.5">
                                 <span className="text-sm text-slate-600">{job.title}</span>
-                                <span className="text-sm font-bold text-slate-900">{job.applications || 0}</span>
+                                <span className="text-sm font-semibold text-slate-900">{job.applications || 0}</span>
                               </div>
                               <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                                 <div
@@ -3224,10 +3306,10 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm transition-all duration-300 hover:shadow-md">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900">Weekly Mail & Communication Activity</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">Weekly Mail & Communication Activity</h2>
                       <p className="text-xs text-slate-500 mt-0.5">Inbound vs Outbound emails across partners</p>
                     </div>
-                    <div className="flex justify-end gap-6 text-xs font-semibold">
+                    <div className="flex justify-end gap-6 text-xs font-medium">
                       <span className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-[#72bf24]"></span> Received
                       </span>
@@ -3272,7 +3354,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Product Management</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Product Management</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage <span className="text-[#72bf24]">SATESOFT</span> software solutions</p>
                   </div>
                   <button
@@ -3287,7 +3369,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
-                      <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                         <th className="py-4 pl-6 w-[30%]">PRODUCT</th>
                         <th className="py-4 w-[55%]">TAGLINE</th>
                         <th className="py-4 pr-6 text-right w-[15%]">ACTIONS</th>
@@ -3374,7 +3456,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Service Management</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Service Management</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage <span className="text-[#72bf24]">SATESOFT</span> service offerings</p>
                   </div>
                   <button
@@ -3389,7 +3471,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
-                      <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                         <th className="py-4 pl-6 w-[40%]">SERVICE</th>
                         <th className="py-4 w-[35%]">SUBTITLE</th>
                         <th className="py-4 pr-6 text-right w-[25%]">ACTIONS</th>
@@ -3476,7 +3558,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Opportunities</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Opportunities</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage job openings and career opportunities</p>
                   </div>
                   <button
@@ -3491,7 +3573,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
-                      <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                         <th className="py-4 pl-6 w-[30%]">TITLE</th>
                         <th className="py-4 w-[20%]">LOCATION</th>
                         <th className="py-4 w-[15%]">TYPE</th>
@@ -3585,7 +3667,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                    <div className="flex items-center justify-between">
                    <div>
-                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Applicants</h1>
+                     <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Applicants</h1>
                      <p className="text-sm text-slate-500 mt-1">Review and manage job applications</p>
                    </div>
                    <div className="flex items-center gap-2">
@@ -3614,23 +3696,23 @@ export default function SatesoftApp() {
                       <>
                         <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
                           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total</div>
-                          <div className="text-xl font-extrabold text-slate-900 mt-1">{stats.total}</div>
+                          <div className="text-xl font-bold text-slate-900 mt-1">{stats.total}</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
                           <div className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Pending</div>
-                          <div className="text-xl font-extrabold text-amber-700 mt-1">{stats.pending}</div>
+                          <div className="text-xl font-bold text-amber-700 mt-1">{stats.pending}</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
                           <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Reviewed</div>
-                          <div className="text-xl font-extrabold text-blue-700 mt-1">{stats.reviewed}</div>
+                          <div className="text-xl font-bold text-blue-700 mt-1">{stats.reviewed}</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
                           <div className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Accepted</div>
-                          <div className="text-xl font-extrabold text-emerald-700 mt-1">{stats.accepted}</div>
+                          <div className="text-xl font-bold text-emerald-700 mt-1">{stats.accepted}</div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
                           <div className="text-xs font-semibold text-red-600 uppercase tracking-wider">Rejected</div>
-                          <div className="text-xl font-extrabold text-red-700 mt-1">{stats.rejected}</div>
+                          <div className="text-xl font-bold text-red-700 mt-1">{stats.rejected}</div>
                         </div>
                       </>
                     );
@@ -3699,7 +3781,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
-                      <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                         <th className="py-4 pl-6">APPLICANT</th>
                         <th className="py-4">OPPORTUNITY</th>
                         <th className="py-4">CONTACT</th>
@@ -3721,7 +3803,7 @@ export default function SatesoftApp() {
                                   </span>
                                 </div>
                                 <div>
-                                  <div className="font-bold text-slate-900 text-sm">{applicant.name}</div>
+                                  <div className="font-semibold text-slate-900 text-sm">{applicant.name}</div>
                                   <div className="text-xs text-slate-400">{applicant.email}</div>
                                 </div>
                               </div>
@@ -3803,7 +3885,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Partner List</h1>
+                    <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">Partner List</h1>
                     <p className="text-sm text-slate-500 mt-1 font-normal">Manage your business partners and collaborations</p>
                   </div>
                   <button
@@ -3818,7 +3900,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 tracking-wider">
+                      <tr className="border-b border-slate-100 text-xs font-semibold text-slate-400 tracking-wider">
                         <th className="pb-4 pl-2">PARTNER</th>
                         <th className="pb-4">INDUSTRY</th>
                         <th className="pb-4">LOCATION</th>
@@ -3833,7 +3915,7 @@ export default function SatesoftApp() {
                           <tr key={partner.id} className="hover:bg-slate-50/70 transition-colors duration-150">
                             <td className="py-5 pl-2">
                               <div>
-                                <div className="font-bold text-slate-900 text-base">{partner.name}</div>
+                                <div className="font-semibold text-slate-900 text-base">{partner.name}</div>
                                 <div className="text-xs text-slate-400 mt-0.5">Joined: {partner.joined}</div>
                               </div>
                             </td>
@@ -3846,7 +3928,7 @@ export default function SatesoftApp() {
                               </div>
                             </td>
                             <td className="py-5">
-                              <span className="bg-[#dcfce7] text-[#166534] text-[11px] font-extrabold px-2.5 py-1 rounded-md tracking-wide transition-all duration-300 hover:scale-105">
+                              <span className="bg-[#dcfce7] text-[#166534] text-[11px] font-bold px-2.5 py-1 rounded-md tracking-wide transition-all duration-300 hover:scale-105">
                                 {partner.status}
                               </span>
                             </td>
@@ -3901,7 +3983,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Board of Advisors</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Board of Advisors</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage profiles and information for the <span className="text-[#72bf24]">SATESOFT</span> Board of Advisors</p>
                   </div>
                   <button
@@ -3916,7 +3998,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
-                      <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                         <th className="py-4 pl-6 w-[25%]">NAME</th>
                         <th className="py-4 w-[20%]">EMAIL</th>
                         <th className="py-4 w-[15%]">CONTACT</th>
@@ -3931,14 +4013,14 @@ export default function SatesoftApp() {
                             <td className="py-5 pl-6">
                               <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-[#f0f9e8] border border-[#d3f0b4] flex items-center justify-center shrink-0 overflow-hidden transition-all duration-300 hover:scale-110">
-                                  {advisor.imageUrl ? (
-                                    <img src={advisor.imageUrl} alt={advisor.name} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <User className="w-5 h-5 text-[#72bf24]" />
-                                  )}
+                                   {advisor.imageUrl ? (
+                                     <img src={resolveImageUrl(advisor.imageUrl)} alt={advisor.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                                   ) : (
+                                     <User className="w-5 h-5 text-[#72bf24]" />
+                                   )}
                                 </div>
                                 <div>
-                                  <div className="font-bold text-slate-900 text-sm">{advisor.name}</div>
+                                  <div className="font-semibold text-slate-900 text-sm">{advisor.name}</div>
                                   <div className="text-xs text-slate-400">{advisor.role}</div>
                                 </div>
                               </div>
@@ -4009,7 +4091,7 @@ export default function SatesoftApp() {
               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-bold text-slate-900">Advisor Details</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Advisor Details</h3>
                     <button onClick={() => setViewAdvisor(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                       <X className="w-5 h-5" />
                     </button>
@@ -4017,7 +4099,7 @@ export default function SatesoftApp() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</label>
-                      <div className="text-sm font-bold text-slate-900 mt-1">{viewAdvisor.name}</div>
+                      <div className="text-sm font-semibold text-slate-900 mt-1">{viewAdvisor.name}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -4068,249 +4150,226 @@ export default function SatesoftApp() {
               </div>
             )}
 
-            {/* ==================== ADVISOR MODAL ==================== */}
-            {isAdvisorModalOpen && (
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
-                  <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">
-                      {advisorModalMode === 'add' ? 'Add New Advisor' : 'Edit Advisor'}
-                    </h3>
-                    <button onClick={() => setIsAdvisorModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
+             {/* ==================== ADVISOR MODAL ==================== */}
+             {isAdvisorModalOpen && (
+               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                 <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
+                   <div className="flex items-center justify-between mb-5">
+                     <h3 className="text-base font-semibold text-slate-900">
+                       {advisorModalMode === 'add' ? 'Add New Advisor' : 'Edit Advisor'}
+                     </h3>
+                     <button 
+                       onClick={() => setIsAdvisorModalOpen(false)} 
+                       className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90"
+                     >
+                       <X className="w-5 h-5" />
+                     </button>
+                   </div>
+
                   {advisorError && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl animate-shake">
                       {advisorError}
                     </div>
                   )}
-                  <form onSubmit={handleSaveAdvisor} className="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={advisorFormData.name}
-                        onChange={(e) => setAdvisorFormData({ ...advisorFormData, name: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                        placeholder="e.g. Dr. Samuel Otieno"
-                      />
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-                        <input
-                          type="email"
-                          required
-                          value={advisorFormData.email}
-                          onChange={(e) => setAdvisorFormData({ ...advisorFormData, email: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                          placeholder="e.g. samuel@satesoft.com"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Contact</label>
-                        <input
-                          type="text"
-                          value={advisorFormData.contact}
-                          onChange={(e) => setAdvisorFormData({ ...advisorFormData, contact: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                          placeholder="e.g. +254 712 345 678"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">LinkedIn URL</label>
-                      <input
-                        type="url"
-                        value={advisorFormData.linkedIn}
-                        onChange={(e) => setAdvisorFormData({ ...advisorFormData, linkedIn: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                        placeholder="e.g. https://linkedin.com/in/samuelotieno"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Image URL</label>
-                      <input
-                        type="url"
-                        value={advisorFormData.imageUrl}
-                        onChange={(e) => setAdvisorFormData({ ...advisorFormData, imageUrl: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                        placeholder="e.g. https://example.com/photo.jpg"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Message</label>
-                      <textarea
-                        rows="4"
-                        value={advisorFormData.message}
-                        onChange={(e) => setAdvisorFormData({ ...advisorFormData, message: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
-                        placeholder="Message from the advisor..."
-                      ></textarea>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Role</label>
-                        <input
-                          type="text"
-                          value={advisorFormData.role}
-                          onChange={(e) => setAdvisorFormData({ ...advisorFormData, role: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                          placeholder="e.g. Board Member, Advisor"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
-                        <select
-                          value={advisorFormData.status}
-                          onChange={(e) => setAdvisorFormData({ ...advisorFormData, status: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                        >
-                          <option>Active</option>
-                          <option>Inactive</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setIsAdvisorModalOpen(false)}
-                        className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
-                      >
-                        Cancel
-                      </button>
-                      <button type="submit" disabled={advisorSaving} className={"px-4 py-2 text-xs font-semibold text-white rounded-xl transition-all duration-300 " + (advisorSaving ? "bg-slate-400 cursor-not-allowed" : "bg-[#72bf24] hover:bg-[#62a71e] hover:shadow-md hover:-translate-y-0.5 cursor-pointer")}>
-                        {advisorSaving ? 'Saving...' : (advisorModalMode === 'add' ? 'Add Advisor' : 'Update Advisor')}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            {/* ==================== SERVICE AGREEMENT MODAL ==================== */}
-            {isAgreementModalOpen && (
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
-                  <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">
-                      {agreementModalMode === 'add' ? 'Add New Section' : 'Edit Section'}
-                    </h3>
-                    <button onClick={() => { setIsAgreementModalOpen(false); setGrammarResult(''); }} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <form id="agreement-form" onSubmit={handleSaveAgreement} className="flex-1 overflow-hidden flex gap-6">
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Section Title</label>
-                        <input
-                          type="text"
-                          required
-                          value={agreementFormData.title}
-                          onChange={(e) => setAgreementFormData({ ...agreementFormData, title: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                          placeholder="e.g. 4. Using the Services & Support"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Content</label>
-                        <textarea
-                          rows="16"
-                          value={agreementFormData.content}
-                          onChange={(e) => setAgreementFormData({ ...agreementFormData, content: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none font-mono custom-scrollbar"
-                          placeholder="Enter your agreement here...&#10;&#10;Use markdown headings:&#10;# Main Section&#10;## Sub-section&#10;### Sub-sub-section&#10;- list item"
-                        ></textarea>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Upload Document</label>
-                        <input
-                          type="file"
-                          accept=".txt,.md,.pdf,.doc,.docx"
-                          onChange={(e) => {
-                            const file = e.target.files[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              const content = event.target.result;
-                              if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-                                setAgreementFormData({ ...agreementFormData, content: content });
-                              } else {
-                                setAgreementFormData({ ...agreementFormData, content: agreementFormData.content + '\n\n[Uploaded file: ' + file.name + ']' });
-                              }
-                            };
-                            reader.readAsText(file);
-                          }}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#f0f9e8] file:text-[#72bf24] hover:file:bg-[#e0f5d0]"
-                        />
-                        <p className="text-xs text-slate-400 mt-1">Supported: .txt, .md, .pdf, .doc, .docx (text files will populate content)</p>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={checkGrammar}
-                          disabled={grammarChecking}
-                          className={"px-4 py-2 text-xs font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 " + (grammarChecking ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer")}
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          {grammarChecking ? 'Checking...' : 'AI Grammar Check'}
-                        </button>
-                        {grammarResult && (
-                          <span className={"text-xs font-medium transition-all duration-300 " + (grammarResult.includes('No grammar issues') ? 'text-emerald-600' : 'text-amber-600')}>
-                            {grammarResult.includes('No grammar issues') ? '✓ ' : ''}{grammarResult.split('\n')[0]}
-                          </span>
-                        )}
-                      </div>
-
-                      {grammarResult && grammarResult.includes('Grammar issues found') && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 whitespace-pre-wrap max-h-32 overflow-y-auto custom-scrollbar">
-                          {grammarResult}
+                    <form onSubmit={handleSaveAdvisor} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">First Name</label>
+                          <input
+                            type="text"
+                            required
+                            value={advisorFormData.name}
+                            onChange={(e) => setAdvisorFormData({ ...advisorFormData, name: e.target.value })}
+                            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                            placeholder="e.g. Samuel"
+                          />
                         </div>
-                      )}
-                    </div>
-
-                    <div className="w-1/2 border-l border-slate-200 pl-6 overflow-y-auto custom-scrollbar">
-                      <div className="sticky top-0 bg-white pb-2 mb-2 border-b border-slate-100">
-                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Preview</h4>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name</label>
+                          <input
+                            type="text"
+                            required
+                            value={advisorFormData.lastName}
+                            onChange={(e) => setAdvisorFormData({ ...advisorFormData, lastName: e.target.value })}
+                            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                            placeholder="e.g. Otieno"
+                          />
+                        </div>
                       </div>
-                      <div className="text-sm text-slate-700 leading-relaxed transition-all duration-300" dangerouslySetInnerHTML={{ __html: renderMarkdown(agreementFormData.content || '*Start typing to see preview...*') }}></div>
-                    </div>
-                  </form>
 
-                  <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-100 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => { setIsAgreementModalOpen(false); setGrammarResult(''); }}
-                      className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" form="agreement-form" className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-                      {agreementModalMode === 'add' ? 'Save Section' : 'Update Section'}
-                    </button>
-                  </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div>
+                         <label className="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                         <input
+                           type="email"
+                           required
+                           value={advisorFormData.email}
+                           onChange={(e) => setAdvisorFormData({ ...advisorFormData, email: e.target.value })}
+                           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                           placeholder="e.g. samuel@satesoft.com"
+                         />
+                       </div>
+                       <div>
+                         <label className="block text-xs font-semibold text-slate-700 mb-1">Contact</label>
+                         <input
+                           type="text"
+                           value={advisorFormData.contact}
+                           onChange={(e) => setAdvisorFormData({ ...advisorFormData, contact: e.target.value })}
+                           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                           placeholder="e.g. +254 712 345 678"
+                         />
+                       </div>
+                     </div>
+
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">LinkedIn URL</label>
+                       <input
+                         type="url"
+                         value={advisorFormData.linkedIn}
+                         onChange={(e) => setAdvisorFormData({ ...advisorFormData, linkedIn: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                         placeholder="e.g. https://linkedin.com/in/samuelotieno"
+                       />
+                     </div>
+
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Image URL</label>
+                       <input
+                         type="url"
+                         value={advisorFormData.imageUrl}
+                         onChange={(e) => setAdvisorFormData({ ...advisorFormData, imageUrl: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                         placeholder="e.g. https://example.com/photo.jpg"
+                       />
+                     </div>
+
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Message / Bio</label>
+                       <textarea
+                         rows="4"
+                         value={advisorFormData.message}
+                         onChange={(e) => setAdvisorFormData({ ...advisorFormData, message: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
+                         placeholder="Message from the advisor..."
+                       />
+                     </div>
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div>
+                         <label className="block text-xs font-semibold text-slate-700 mb-1">Role</label>
+                         <input
+                           type="text"
+                           value={advisorFormData.role}
+                           onChange={(e) => setAdvisorFormData({ ...advisorFormData, role: e.target.value })}
+                           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                           placeholder="e.g. Board Member, Advisor"
+                         />
+                       </div>
+                       <div>
+                         <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+                         <select
+                           value={advisorFormData.status}
+                           onChange={(e) => setAdvisorFormData({ ...advisorFormData, status: e.target.value })}
+                           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all bg-white"
+                         >
+                           <option value="Active">Active</option>
+                           <option value="Inactive">Inactive</option>
+                         </select>
+                       </div>
+                     </div>
+
+                     <div className="flex justify-end gap-3 pt-4">
+                       <button
+                         type="button"
+                         onClick={() => setIsAdvisorModalOpen(false)}
+                         className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
+                       >
+                         Cancel
+                       </button>
+                       <button 
+                         type="submit" 
+                         disabled={advisorSaving} 
+                         className={`px-4 py-2 text-xs font-semibold text-white rounded-xl transition-all duration-300 ${
+                           advisorSaving 
+                             ? "bg-slate-400 cursor-not-allowed" 
+                             : "bg-[#72bf24] hover:bg-[#62a71e] hover:shadow-md hover:-translate-y-0.5"
+                         }`}
+                       >
+                         <span>{advisorSaving ? 'Saving...' : (advisorModalMode === 'add' ? 'Add Advisor' : 'Update Advisor')}</span>
+                       </button>
+                     </div>
+                   </form>
                 </div>
               </div>
             )}
+
+             {/* ==================== SERVICE AGREEMENT MODAL ==================== */}
+             {isAgreementModalOpen && (
+               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                 <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
+                   <div className="flex items-center justify-between mb-5">
+                     <h3 className="text-base font-semibold text-slate-900">
+                       {agreementModalMode === 'add' ? 'Add New Agreement Section' : 'Edit Agreement Section'}
+                     </h3>
+                     <button 
+                       onClick={() => { setIsAgreementModalOpen(false); setGrammarResult(''); }} 
+                       className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90"
+                     >
+                       <X className="w-5 h-5" />
+                     </button>
+                   </div>
+
+                    <form onSubmit={handleSaveAgreement} className="space-y-4">
+                      <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Section Title</label>
+                       <input
+                         type="text"
+                         required
+                         value={agreementFormData.title}
+                         onChange={(e) => setAgreementFormData({ ...agreementFormData, title: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                         placeholder="e.g. 4. Using the Services"
+                       />
+                     </div>
+
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Content</label>
+                       <textarea
+                         rows="8"
+                         value={agreementFormData.content}
+                         onChange={(e) => setAgreementFormData({ ...agreementFormData, content: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
+                         placeholder="Enter agreement content here..."
+                       />
+                     </div>
+
+                     <div className="flex justify-end gap-3 pt-4">
+                       <button
+                         type="button"
+                         onClick={() => { setIsAgreementModalOpen(false); setGrammarResult(''); }}
+                         className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
+                       >
+                         Cancel
+                       </button>
+                        <button 
+                          type="submit" 
+                          className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+                        >
+                          <span>{agreementModalMode === 'add' ? 'Add Section' : 'Update Section'}</span>
+                       </button>
+                     </div>
+                   </form>
+                 </div>
+               </div>
+             )}
 
             {/* ==================== VIEW AGREEMENT MODAL ==================== */}
             {viewAgreement && (
               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
                   <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">{viewAgreement.title}</h3>
+                    <h3 className="text-base font-semibold text-slate-900">{viewAgreement.title}</h3>
                     <button onClick={() => setViewAgreement(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                       <X className="w-5 h-5" />
                     </button>
@@ -4337,123 +4396,136 @@ export default function SatesoftApp() {
               </div>
             )}
 
-            {/* ==================== PRIVACY POLICY MODAL ==================== */}
-            {isPrivacyPolicyModalOpen && (
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
-                  <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">
-                      {privacyPolicyModalMode === 'add' ? 'Add New Privacy Policy' : 'Edit Privacy Policy'}
-                    </h3>
-                    <button onClick={() => setIsPrivacyPolicyModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <form id="privacy-policy-form" onSubmit={handleSavePrivacyPolicy} className="flex-1 overflow-hidden flex gap-6">
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+             {/* ==================== PRIVACY POLICY MODAL ==================== */}
+             {isPrivacyPolicyModalOpen && (
+               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                 <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
+                   <div className="flex items-center justify-between mb-5">
+                     <h3 className="text-base font-semibold text-slate-900">
+                       {privacyPolicyModalMode === 'add' ? 'Add New Privacy Policy' : 'Edit Privacy Policy'}
+                     </h3>
+                     <button 
+                       onClick={() => setIsPrivacyPolicyModalOpen(false)} 
+                       className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90"
+                     >
+                       <X className="w-5 h-5" />
+                     </button>
+                   </div>
+
+                    <form onSubmit={handleSavePrivacyPolicy} className="space-y-4">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Title</label>
-                        <input
-                          type="text"
-                          required
-                          value={privacyPolicyFormData.title}
-                          onChange={(e) => setPrivacyPolicyFormData({ ...privacyPolicyFormData, title: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                          placeholder="e.g. Privacy Policy"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Content</label>
-                        <textarea
-                          rows="16"
-                          value={privacyPolicyFormData.content}
-                          onChange={(e) => setPrivacyPolicyFormData({ ...privacyPolicyFormData, content: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none font-mono custom-scrollbar"
-                          placeholder="Enter your privacy policy content here...&#10;&#10;Use markdown headings:&#10;# Main Section&#10;## Sub-section&#10;- list item"
-                        ></textarea>
-                      </div>
-                    </div>
-                    <div className="w-1/2 border-l border-slate-200 pl-6 overflow-y-auto custom-scrollbar">
-                      <div className="sticky top-0 bg-white pb-2 mb-2 border-b border-slate-100">
-                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Preview</h4>
-                      </div>
-                      <div className="text-sm text-slate-700 leading-relaxed transition-all duration-300" dangerouslySetInnerHTML={{ __html: renderMarkdown(privacyPolicyFormData.content || '*Start typing to see preview...*') }}></div>
-                    </div>
-                  </form>
-                  <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-100 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setIsPrivacyPolicyModalOpen(false)}
-                      className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" form="privacy-policy-form" className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-                      {privacyPolicyModalMode === 'add' ? 'Save Policy' : 'Update Policy'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Title</label>
+                       <input
+                         type="text"
+                         required
+                         value={privacyPolicyFormData.title}
+                         onChange={(e) => setPrivacyPolicyFormData({ ...privacyPolicyFormData, title: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                         placeholder="e.g. Privacy Policy"
+                       />
+                     </div>
 
-            {/* ==================== VIEW PRIVACY POLICY MODAL ==================== */}
-            {viewPrivacyPolicy && (
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
-                  <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">{viewPrivacyPolicy.title}</h3>
-                    <button onClick={() => setViewPrivacyPolicy(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div className="text-sm text-slate-700 leading-relaxed transition-all duration-300" dangerouslySetInnerHTML={{ __html: renderMarkdown(viewPrivacyPolicy.content || 'No content available.') }}></div>
-                  </div>
-                  <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-100 shrink-0">
-                    <button
-                      onClick={() => { setViewPrivacyPolicy(null); handleOpenEditPrivacyPolicy(viewPrivacyPolicy); }}
-                      className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 flex items-center gap-2 hover:shadow-md hover:-translate-y-0.5"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      Edit Policy
-                    </button>
-                    <button
-                      onClick={() => setViewPrivacyPolicy(null)}
-                      className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Content</label>
+                       <textarea
+                         rows="8"
+                         value={privacyPolicyFormData.content}
+                         onChange={(e) => setPrivacyPolicyFormData({ ...privacyPolicyFormData, content: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
+                         placeholder="Enter privacy policy content here..."
+                       />
+                     </div>
 
-            {/* ==================== JURISDICTION MODAL ==================== */}
-            {isJurisdictionModalOpen && (
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
-                  <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">
-                      {jurisdictionModalMode === 'add' ? 'Add New Jurisdiction' : 'Edit Jurisdiction'}
-                    </h3>
-                    <button onClick={() => setIsJurisdictionModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <form onSubmit={handleSaveJurisdiction} className="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Country</label>
-                      <input
-                        type="text"
-                        required
-                        value={jurisdictionFormData.country}
-                        onChange={(e) => setJurisdictionFormData({ ...jurisdictionFormData, country: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                        placeholder="e.g. Kenya"
-                      />
-                    </div>
+                     <div className="flex justify-end gap-3 pt-4">
+                       <button
+                         type="button"
+                         onClick={() => setIsPrivacyPolicyModalOpen(false)}
+                         className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
+                       >
+                         Cancel
+                       </button>
+                        <button 
+                          type="submit" 
+                          className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+                        >
+                          <span>{privacyPolicyModalMode === 'add' ? 'Add Policy' : 'Update Policy'}</span>
+                       </button>
+                     </div>
+                   </form>
+                 </div>
+               </div>
+             )}
 
-                    <div className="grid grid-cols-2 gap-3">
+             {/* ==================== VIEW PRIVACY POLICY MODAL ==================== */}
+             {viewPrivacyPolicy && (
+               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                 <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
+                   <div className="flex items-center justify-between mb-5">
+                     <h3 className="text-base font-semibold text-slate-900">{viewPrivacyPolicy.title}</h3>
+                     <button onClick={() => setViewPrivacyPolicy(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
+                       <X className="w-5 h-5" />
+                     </button>
+                   </div>
+
+                   <div className="space-y-4 overflow-y-auto pr-2 max-h-[60vh]">
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Title</label>
+                       <div className="text-sm font-semibold text-slate-900 mt-1">{viewPrivacyPolicy.title}</div>
+                     </div>
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Content</label>
+                       <div className="text-sm text-slate-700 mt-1 whitespace-pre-wrap">{viewPrivacyPolicy.content || 'No content available.'}</div>
+                     </div>
+                   </div>
+
+                   <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-100 shrink-0">
+                     <button
+                       onClick={() => { setViewPrivacyPolicy(null); handleOpenEditPrivacyPolicy(viewPrivacyPolicy); }}
+                       className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 flex items-center gap-2 hover:shadow-md hover:-translate-y-0.5"
+                     >
+                       <Pencil className="w-3.5 h-3.5" />
+                       Edit Policy
+                     </button>
+                     <button
+                       onClick={() => setViewPrivacyPolicy(null)}
+                       className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
+                     >
+                       Close
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             )}
+
+             {/* ==================== JURISDICTION MODAL ==================== */}
+             {isJurisdictionModalOpen && (
+               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                 <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
+                   <div className="flex items-center justify-between mb-5">
+                     <h3 className="text-base font-semibold text-slate-900">
+                       {jurisdictionModalMode === 'add' ? 'Add New Jurisdiction' : 'Edit Jurisdiction'}
+                     </h3>
+                     <button 
+                       onClick={() => setIsJurisdictionModalOpen(false)} 
+                       className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90"
+                     >
+                       <X className="w-5 h-5" />
+                     </button>
+                   </div>
+
+                   <form onSubmit={handleSaveJurisdiction} className="space-y-4">
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Country</label>
+                       <input
+                         type="text"
+                         required
+                         value={jurisdictionFormData.country}
+                         onChange={(e) => setJurisdictionFormData({ ...jurisdictionFormData, country: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                         placeholder="e.g. Kenya"
+                       />
+                     </div>
+
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">Lead Entity</label>
                         <input
@@ -4464,6 +4536,7 @@ export default function SatesoftApp() {
                           placeholder="e.g. SATESOFT Kenya Ltd"
                         />
                       </div>
+
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">Entity Type</label>
                         <input
@@ -4474,53 +4547,55 @@ export default function SatesoftApp() {
                           placeholder="e.g. Subsidiary, Branch"
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Primary Law</label>
-                      <input
-                        type="text"
-                        value={jurisdictionFormData.primary_law}
-                        onChange={(e) => setJurisdictionFormData({ ...jurisdictionFormData, primary_law: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
-                        placeholder="e.g. Companies Act, 2015"
-                      />
-                    </div>
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Primary Law</label>
+                       <input
+                         type="text"
+                         value={jurisdictionFormData.primary_law}
+                         onChange={(e) => setJurisdictionFormData({ ...jurisdictionFormData, primary_law: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                         placeholder="e.g. Companies Act, 2015"
+                       />
+                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Additional Laws</label>
-                      <textarea
-                        rows="3"
-                        value={jurisdictionFormData.additional_laws}
-                        onChange={(e) => setJurisdictionFormData({ ...jurisdictionFormData, additional_laws: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
-                        placeholder="e.g. Data Protection Act, 2019"
-                      ></textarea>
-                    </div>
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Additional Laws</label>
+                       <textarea
+                         rows="3"
+                         value={jurisdictionFormData.additional_laws}
+                         onChange={(e) => setJurisdictionFormData({ ...jurisdictionFormData, additional_laws: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
+                         placeholder="e.g. Data Protection Act, 2019"
+                       />
+                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setIsJurisdictionModalOpen(false)}
-                        className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
-                      >
-                        Cancel
-                      </button>
-                      <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-                        {jurisdictionModalMode === 'add' ? 'Add Jurisdiction' : 'Update Jurisdiction'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
+                     <div className="flex justify-end gap-3 pt-4">
+                       <button
+                         type="button"
+                         onClick={() => setIsJurisdictionModalOpen(false)}
+                         className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
+                       >
+                         Cancel
+                       </button>
+                       <button 
+                         type="submit" 
+                         className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+                       >
+                         <span>{jurisdictionModalMode === 'add' ? 'Add Jurisdiction' : 'Update Jurisdiction'}</span>
+                       </button>
+                     </div>
+                   </form>
+                 </div>
+               </div>
+             )}
 
             {/* ==================== VIEW JURISDICTION MODAL ==================== */}
             {viewJurisdiction && (
               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-bold text-slate-900">Jurisdiction Details</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Jurisdiction Details</h3>
                     <button onClick={() => setViewJurisdiction(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                       <X className="w-5 h-5" />
                     </button>
@@ -4528,7 +4603,7 @@ export default function SatesoftApp() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Country</label>
-                      <div className="text-sm font-bold text-slate-900 mt-1">{viewJurisdiction.country}</div>
+                      <div className="text-sm font-semibold text-slate-900 mt-1">{viewJurisdiction.country}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -4571,57 +4646,66 @@ export default function SatesoftApp() {
             {/* ==================== CONTACT MODAL ==================== */}
             {isContactModalOpen && (
               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
-                  <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">
-                      {contactModalMode === 'add' ? 'Add New Contact' : 'Edit Contact'}
-                    </h3>
-                    <button onClick={() => setIsContactModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
+                <div className="bg-white rounded-2xl max-w-2xl w-full p-8 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-xl font-semibold text-slate-900">
+                        {contactModalMode === 'add' ? 'Add New Contact' : 'Edit Contact'}
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-1">
+                        {contactModalMode === 'add' ? 'Create a new contact entry' : 'Update contact information'}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setIsContactModalOpen(false)} 
+                      className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-xl transition-all duration-300"
+                    >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <form onSubmit={handleSaveContact} className="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                    <div className="grid grid-cols-2 gap-3">
+
+                  <form onSubmit={handleSaveContact} className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Placeholder ID</label>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Placeholder ID</label>
                         <input
                           type="text"
                           value={contactFormData.placeholder_id}
                           onChange={(e) => setContactFormData({ ...contactFormData, placeholder_id: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                          className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-2 focus:ring-[#72bf24]/20 transition-all"
                           placeholder="e.g. LC1, LC2"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Point</label>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Contact Point</label>
                         <input
                           type="text"
                           required
                           value={contactFormData.contact_point}
                           onChange={(e) => setContactFormData({ ...contactFormData, contact_point: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                          className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-2 focus:ring-[#72bf24]/20 transition-all"
                           placeholder="e.g. email, phone, handle"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Section</label>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Section</label>
                         <input
                           type="text"
                           value={contactFormData.section}
                           onChange={(e) => setContactFormData({ ...contactFormData, section: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                          className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-2 focus:ring-[#72bf24]/20 transition-all"
                           placeholder="e.g. Legal, Support"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Category</label>
                         <select
                           value={contactFormData.category}
                           onChange={(e) => setContactFormData({ ...contactFormData, category: e.target.value })}
-                          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                          className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-2 focus:ring-[#72bf24]/20 transition-all bg-white"
                         >
                           <option value="general">General Contact Directory</option>
                           <option value="legal">Legal Contact Directory</option>
@@ -4631,26 +4715,29 @@ export default function SatesoftApp() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Purpose / Context</label>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Purpose / Context</label>
                       <textarea
                         rows="3"
                         value={contactFormData.purpose_context}
                         onChange={(e) => setContactFormData({ ...contactFormData, purpose_context: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
+                        className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-2 focus:ring-[#72bf24]/20 transition-all resize-none"
                         placeholder="Describe the purpose or context for this contact..."
-                      ></textarea>
+                      />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 shrink-0">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-2">
                       <button
                         type="button"
                         onClick={() => setIsContactModalOpen(false)}
-                        className="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
+                        className="px-6 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-300"
                       >
                         Cancel
                       </button>
-                      <button type="submit" className="px-4 py-2 text-xs font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-                        {contactModalMode === 'add' ? 'Add Contact' : 'Update Contact'}
+                      <button 
+                        type="submit" 
+                        className="px-6 py-2.5 text-sm font-semibold text-white bg-[#72bf24] hover:bg-[#62a71e] rounded-xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
+                      >
+                        <span>{contactModalMode === 'add' ? 'Add Contact' : 'Update Contact'}</span>
                       </button>
                     </div>
                   </form>
@@ -4663,7 +4750,7 @@ export default function SatesoftApp() {
               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-bold text-slate-900">Contact Details</h3>
+                    <h3 className="text-base font-semibold text-slate-900">Contact Details</h3>
                     <button onClick={() => setViewContact(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                       <X className="w-5 h-5" />
                     </button>
@@ -4672,11 +4759,11 @@ export default function SatesoftApp() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Placeholder ID</label>
-                        <div className="text-sm font-bold text-slate-900 mt-1">{viewContact.placeholder_id || '-'}</div>
+                        <div className="text-sm font-semibold text-slate-900 mt-1">{viewContact.placeholder_id || '-'}</div>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact Point</label>
-                        <div className="text-sm font-bold text-slate-900 mt-1">{viewContact.contact_point}</div>
+                        <div className="text-sm font-semibold text-slate-900 mt-1">{viewContact.contact_point}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -4718,7 +4805,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Mailbox</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Mailbox</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage your communications</p>
                   </div>
                   <button className="bg-[#72bf24] hover:bg-[#62a71e] text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
@@ -4876,7 +4963,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Company News Management</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Company News Management</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage blog posts and company announcements</p>
                   </div>
                   <button
@@ -4891,7 +4978,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
-                      <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                         <th className="py-4 pl-6 w-[35%]">TITLE</th>
                         <th className="py-4 w-[15%]">CATEGORY</th>
                         <th className="py-4 w-[15%]">AUTHOR</th>
@@ -4978,15 +5065,20 @@ export default function SatesoftApp() {
               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-bold text-slate-900">News Details</h3>
+                    <h3 className="text-base font-semibold text-slate-900">News Details</h3>
                     <button onClick={() => setViewNews(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                       <X className="w-5 h-5" />
                     </button>
-                  </div>
-                  <div className="space-y-4">
+                   </div>
+                   <div className="space-y-4">
+                    {viewNews.imageUrl && (
+                      <div className="flex justify-center">
+                        <img src={resolveImageUrl(viewNews.imageUrl)} alt={viewNews.title} className="w-full h-48 object-cover rounded-xl border border-slate-200" onError={(e) => { e.target.style.display = 'none'; }} />
+                      </div>
+                    )}
                     <div>
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Title</label>
-                      <div className="text-sm font-bold text-slate-900 mt-1">{viewNews.title}</div>
+                      <div className="text-sm font-semibold text-slate-900 mt-1">{viewNews.title}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -5033,9 +5125,9 @@ export default function SatesoftApp() {
             {/* ==================== NEWS MODAL ==================== */}
             {isNewsModalOpen && (
               <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
+                 <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
                   <div className="flex items-center justify-between mb-5 shrink-0">
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-base font-semibold text-slate-900">
                       {newsModalMode === 'add' ? 'Add New News Post' : 'Edit News Post'}
                     </h3>
                     <button onClick={() => setIsNewsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
@@ -5101,18 +5193,30 @@ export default function SatesoftApp() {
                       ></textarea>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">Content</label>
-                      <textarea
-                        rows="6"
-                        value={newsFormData.content}
-                        onChange={(e) => setNewsFormData({ ...newsFormData, content: e.target.value })}
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
-                        placeholder="Full news content..."
-                      ></textarea>
-                    </div>
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Content</label>
+                       <textarea
+                         rows="6"
+                         value={newsFormData.content}
+                         onChange={(e) => setNewsFormData({ ...newsFormData, content: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all resize-none"
+                         placeholder="Full news content..."
+                       ></textarea>
+                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 shrink-0">
+                     <div>
+                       <label className="block text-xs font-semibold text-slate-700 mb-1">Image URL</label>
+                       <input
+                         type="text"
+                         value={newsFormData.imageUrl}
+                         onChange={(e) => setNewsFormData({ ...newsFormData, imageUrl: e.target.value })}
+                         className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl outline-none focus:border-[#72bf24] focus:ring-1 focus:ring-[#72bf24] transition-all"
+                         placeholder="https://example.com/image.jpg or /uploads/image.jpg"
+                       />
+                       <p className="text-[10px] text-slate-400 mt-1">Leave empty to use default image. Supports external URLs and local paths.</p>
+                     </div>
+
+                     <div className="flex justify-end gap-3 pt-4 shrink-0">
                       <button
                         type="button"
                         onClick={() => setIsNewsModalOpen(false)}
@@ -5137,14 +5241,14 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Settings</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Settings</h1>
                     <p className="text-sm text-slate-500 mt-1">Configure system preferences and user settings</p>
                   </div>
                 </div>
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm transition-all duration-300 hover:shadow-md">
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <h3 className="text-sm font-bold text-slate-900">General Settings</h3>
+                      <h3 className="text-sm font-semibold text-slate-900">General Settings</h3>
                       <div className="space-y-2">
                         <label className="flex items-center justify-between">
                           <span className="text-sm text-slate-600">Dark Mode</span>
@@ -5163,7 +5267,7 @@ export default function SatesoftApp() {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-sm font-bold text-slate-900">Account Preferences</h3>
+                      <h3 className="text-sm font-semibold text-slate-900">Account Preferences</h3>
                       <div className="space-y-2">
                         <button onClick={() => setActiveTab('manage-account')} className="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-all duration-300">Change Password</button>
                         <button className="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-all duration-300">Two-Factor Authentication</button>
@@ -5180,7 +5284,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Manage Account</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Manage Account</h1>
                     <p className="text-sm text-slate-500 mt-1">Update your login credentials</p>
                   </div>
                 </div>
@@ -5249,7 +5353,7 @@ export default function SatesoftApp() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Pricing Management</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Pricing Management</h1>
                     <p className="text-sm text-slate-500 mt-1">Manage pricing plans displayed on the website</p>
                   </div>
                   <button
@@ -5264,7 +5368,7 @@ export default function SatesoftApp() {
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-[#f8fafc]">
-                      <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 tracking-wider">
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 tracking-wider">
                         <th className="py-4 pl-6">PLAN</th>
                         <th className="py-4">PRICE</th>
                         <th className="py-4">FEATURES</th>
@@ -5277,7 +5381,7 @@ export default function SatesoftApp() {
                         pricing.map((item) => (
                           <tr key={item.id} className="hover:bg-slate-50/70 transition-colors duration-150">
                             <td className="py-5 pl-6">
-                              <div className="font-bold text-slate-900 text-sm">{item.plan}</div>
+                              <div className="font-semibold text-slate-900 text-sm">{item.plan}</div>
                             </td>
                             <td className="py-5 text-sm text-slate-600">${item.price}/Monthly</td>
                             <td className="py-5 text-sm text-slate-600">
@@ -5348,7 +5452,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">Applicant Details</h3>
+                <h3 className="text-base font-semibold text-slate-900">Applicant Details</h3>
                 <button onClick={() => setViewApplicant(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                   <X className="w-5 h-5" />
                 </button>
@@ -5361,7 +5465,7 @@ export default function SatesoftApp() {
                     </span>
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-slate-900">{viewApplicant.name}</div>
+                    <div className="text-sm font-semibold text-slate-900">{viewApplicant.name}</div>
                     <div className="text-xs text-slate-400">{viewApplicant.email}</div>
                   </div>
                 </div>
@@ -5446,7 +5550,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5 shrink-0">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-semibold text-slate-900">
                   {applicantModalMode === 'add' ? 'Add New Applicant' : 'Edit Applicant'}
                 </h3>
                 <button onClick={() => setIsApplicantModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
@@ -5563,7 +5667,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">Product Details</h3>
+                <h3 className="text-base font-semibold text-slate-900">Product Details</h3>
                 <button onClick={() => setViewProduct(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                   <X className="w-5 h-5" />
                 </button>
@@ -5571,12 +5675,12 @@ export default function SatesoftApp() {
               <div className="space-y-4">
                 {viewProduct.logoUrl && (
                   <div className="flex justify-center">
-                    <img src={viewProduct.logoUrl} alt={viewProduct.name} className="w-24 h-24 object-contain rounded-xl border border-slate-200 bg-slate-50" />
+                     <img src={resolveImageUrl(viewProduct.logoUrl)} alt={viewProduct.name} className="w-24 h-24 object-contain rounded-xl border border-slate-200 bg-slate-50" onError={(e) => { e.target.style.display = 'none'; }} />
                   </div>
                 )}
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Product Name</label>
-                  <div className="text-sm font-bold text-slate-900 mt-1">{viewProduct.name}</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1">{viewProduct.name}</div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Tagline</label>
@@ -5628,7 +5732,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">Opportunity Details</h3>
+                <h3 className="text-base font-semibold text-slate-900">Opportunity Details</h3>
                 <button onClick={() => setViewOpportunity(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                   <X className="w-5 h-5" />
                 </button>
@@ -5636,7 +5740,7 @@ export default function SatesoftApp() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Job Title</label>
-                  <div className="text-sm font-bold text-slate-900 mt-1">{viewOpportunity.title}</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1">{viewOpportunity.title}</div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Location</label>
@@ -5683,7 +5787,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5 shrink-0">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-semibold text-slate-900">
                   {opportunityModalMode === 'add' ? 'Add New Opportunity' : 'Edit Opportunity'}
                 </h3>
                 <button onClick={() => setIsOpportunityModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
@@ -5816,7 +5920,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-semibold text-slate-900">
                   {productModalMode === 'add' ? 'Add New Product' : 'Edit Product'}
                 </h3>
                 <button onClick={() => setIsProductModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
@@ -5903,7 +6007,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">Partner Details</h3>
+                <h3 className="text-base font-semibold text-slate-900">Partner Details</h3>
                 <button onClick={() => setViewPartner(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                   <X className="w-5 h-5" />
                 </button>
@@ -5914,7 +6018,7 @@ export default function SatesoftApp() {
                     <Building2 className="w-8 h-8 text-[#72bf24]" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-slate-900">{viewPartner.name}</div>
+                    <div className="text-sm font-semibold text-slate-900">{viewPartner.name}</div>
                     <div className="text-xs text-slate-400">{viewPartner.industry} • {viewPartner.location}</div>
                   </div>
                 </div>
@@ -5965,7 +6069,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5 shrink-0">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-semibold text-slate-900">
                   {partnerModalMode === 'add' ? 'Add New Partner' : 'Edit Partner'}
                 </h3>
                 <button onClick={() => setIsPartnerModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
@@ -6059,7 +6163,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 flex flex-col max-h-[90vh] transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5 shrink-0">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-semibold text-slate-900">
                   {pricingModalMode === 'add' ? 'Add Pricing Plan' : 'Edit Pricing Plan'}
                 </h3>
                 <button onClick={() => setIsPricingModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
@@ -6142,7 +6246,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">Pricing Plan Details</h3>
+                <h3 className="text-base font-semibold text-slate-900">Pricing Plan Details</h3>
                 <button onClick={() => setViewPricing(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                   <X className="w-5 h-5" />
                 </button>
@@ -6150,11 +6254,11 @@ export default function SatesoftApp() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Plan</label>
-                  <div className="text-sm font-bold text-slate-900 mt-1">{viewPricing.plan}</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1">{viewPricing.plan}</div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</label>
-                  <div className="text-sm font-bold text-slate-900 mt-1">${viewPricing.price}</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1">${viewPricing.price}</div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Features</label>
@@ -6199,7 +6303,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-semibold text-slate-900">
                   {serviceModalMode === 'add' ? 'Add New Service' : 'Edit Service'}
                 </h3>
                 <button onClick={() => setIsServiceModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
@@ -6296,7 +6400,7 @@ export default function SatesoftApp() {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 transition-all duration-300 hover:shadow-2xl">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-bold text-slate-900">Service Details</h3>
+                <h3 className="text-base font-semibold text-slate-900">Service Details</h3>
                 <button onClick={() => setViewService(null)} className="text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 hover:rotate-90">
                   <X className="w-5 h-5" />
                 </button>
@@ -6304,12 +6408,12 @@ export default function SatesoftApp() {
               <div className="space-y-4">
                 {viewService.imageUrl && (
                   <div className="flex justify-center">
-                    <img src={viewService.imageUrl} alt={viewService.title} className="w-24 h-24 object-contain rounded-xl border border-slate-200 bg-slate-50" />
+                     <img src={resolveImageUrl(viewService.imageUrl)} alt={viewService.title} className="w-24 h-24 object-contain rounded-xl border border-slate-200 bg-slate-50" onError={(e) => { e.target.style.display = 'none'; }} />
                   </div>
                 )}
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Service Title</label>
-                  <div className="text-sm font-bold text-slate-900 mt-1">{viewService.title}</div>
+                  <div className="text-sm font-semibold text-slate-900 mt-1">{viewService.title}</div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Subtitle</label>
@@ -6351,6 +6455,108 @@ export default function SatesoftApp() {
                 >
                   Close
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== STATS DETAIL MODAL ==================== */}
+        {viewStatsDetail && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl max-w-3xl w-full shadow-xl border border-slate-100 flex flex-col max-h-[85vh] transition-all duration-300 hover:shadow-2xl">
+              <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {viewStatsDetail.type === 'comments' ? 'Comments by Article' : viewStatsDetail.type === 'views' ? 'Views by Post' : 'Subscribers'}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {viewStatsDetail.type === 'comments' ? `${viewStatsDetail.data.reduce((sum, a) => sum + (a.totalComments || 0), 0)} total comments across ${viewStatsDetail.data.length} articles` : viewStatsDetail.type === 'views' ? `${viewStatsDetail.data.reduce((sum, p) => sum + (p.views || 0), 0)} total views across ${viewStatsDetail.data.length} posts` : `${viewStatsDetail.data.length} subscribers`}
+                  </p>
+                </div>
+                <button onClick={() => { console.log('Closing modal, current data:', viewStatsDetail); setViewStatsDetail(null); }} className="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-all duration-300 hover:rotate-90">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+               <div className="overflow-y-auto flex-1 custom-scrollbar p-6">
+                  {viewStatsDetail.type === 'comments' && viewStatsDetail.data.map((article) => {
+                    const articleTitle = (newsPosts || []).find((n) => n.id === article.articleId)?.title || 'Unknown Article';
+                    const comments = article.comments || [];
+                    return (
+                     <div key={article.articleId} className="mb-6 last:mb-0 p-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50/80 to-white">
+                       <div className="flex items-center justify-between mb-3">
+                         <h4 className="text-sm font-semibold text-slate-900">{articleTitle}</h4>
+                         <button
+                           onClick={() => handleClearArticleComments(article)}
+                           className="text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition-colors duration-200"
+                         >
+                           Clear Comments
+                         </button>
+                       </div>
+                       {comments.length === 0 ? (
+                         <div className="text-center py-6 text-slate-400 text-sm">No comments yet.</div>
+                       ) : (
+                         <div className="space-y-3">
+                           {comments.map((comment) => (
+                             <div key={comment._id || comment.id} className="flex items-start gap-3 p-3 rounded-xl bg-white border border-slate-100">
+                               <div className="flex-1">
+                                 <div className="flex items-center gap-2 mb-1">
+                                   <span className="text-sm font-semibold text-slate-900">{comment.author || 'Anonymous'}</span>
+                                   <span className="text-[10px] text-slate-400">{new Date(comment.createdAt || comment.created_at).toLocaleDateString()}</span>
+                                 </div>
+                                 <p className="text-sm text-slate-600 leading-relaxed">{comment.content}</p>
+                                 {comment.replies && comment.replies.length > 0 && (
+                                   <div className="mt-2 ml-4 space-y-2">
+                                     {comment.replies.map((reply) => (
+                                       <div key={reply._id || reply.id} className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                         <div className="flex items-center gap-2 mb-1">
+                                           <span className="text-xs font-semibold text-slate-900">{reply.author || 'Anonymous'}</span>
+                                           <span className="text-[10px] text-slate-400">{new Date(reply.createdAt || reply.created_at).toLocaleDateString()}</span>
+                                         </div>
+                                         <p className="text-xs text-slate-600">{reply.content}</p>
+                                       </div>
+                                     ))}
+                                   </div>
+                                 )}
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       )}
+                     </div>
+                    );
+                  })}
+                {viewStatsDetail.type === 'views' && viewStatsDetail.data.map((post) => (
+                  <div key={post.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50/80 to-white mb-3 last:mb-0">
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900">{post.title}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5">{post.category || 'Uncategorized'} • {post.date || 'No date'}</p>
+                    </div>
+                    <span className="text-sm font-semibold text-rose-600 bg-rose-50 px-3 py-1 rounded-full">{post.views || 0} views</span>
+                  </div>
+                ))}
+                 {viewStatsDetail.type === 'subscribers' && (
+                   <div className="p-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50/80 to-white">
+                     <div className="flex items-center justify-between mb-4">
+                       <h4 className="text-sm font-semibold text-slate-900">All Subscribers</h4>
+                       <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-3 py-1 rounded-full">{viewStatsDetail.data.length} subscribers</span>
+                     </div>
+                     {viewStatsDetail.data.length === 0 ? (
+                       <div className="text-center py-8 text-slate-400 text-sm">No subscribers yet.</div>
+                     ) : (
+                       <div className="space-y-3">
+                         {viewStatsDetail.data.map((sub) => (
+                           <div key={sub.id} className="flex items-center justify-between py-2">
+                             <div>
+                               <h4 className="text-sm font-semibold text-slate-900">{sub.email}</h4>
+                               <p className="text-xs text-slate-400 mt-0.5">{sub.name || 'No name'} • {new Date(sub.subscribed_at).toLocaleDateString()}</p>
+                             </div>
+                             <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-3 py-1 rounded-full">Subscriber</span>
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                 )}
               </div>
             </div>
           </div>

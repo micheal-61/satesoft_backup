@@ -358,7 +358,7 @@ const Environmental = () => {
       {/* ============================================================
           CSS ANIMATIONS
           ============================================================ */}
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

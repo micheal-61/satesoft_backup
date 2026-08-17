@@ -1,17 +1,23 @@
+
+
 import express from 'express';
 import mysql from 'mysql2/promise';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'node:path';
-import fs from 'node:fs/promises';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import { createRequire } from 'node:module';
+import multer from 'multer';
 const require = createRequire(import.meta.url);
 const Imap = require('imap');
 import { simpleParser } from 'mailparser';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -44,6 +50,32 @@ const transporter = nodemailer.createTransport({
 app.use(cors());
 app.use(express.json({ limit: '8mb' }));
 
+const uploadsDir = path.join(__dirname, 'public', 'uploads', 'cvs');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const cvStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = 'cv_' + Date.now() + '_' + Math.round(Math.random() * 1e9) + ext;
+    cb(null, name);
+  },
+});
+
+const cvUpload = multer({
+  storage: cvStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error('Invalid file type. Only PDF, DOC, DOCX allowed.'));
+  },
+});
+
 // Database Connection Pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -70,7 +102,6 @@ const initializeDatabase = async () => {
   try {
     connection = await pool.getConnection();
 
-    // Helper to run each table init independently so one failure doesn't stop the rest
     const initTable = async (name, fn) => {
       try {
         await fn();
@@ -227,11 +258,35 @@ const initializeDatabase = async () => {
           publish_date DATE DEFAULT NULL,
           excerpt TEXT DEFAULT NULL,
           content TEXT DEFAULT NULL,
+          views INT DEFAULT 0,
+          image_url VARCHAR(500) DEFAULT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
       `);
+      try {
+        await connection.query('ALTER TABLE news_posts ADD COLUMN IF NOT EXISTS content TEXT DEFAULT NULL');
+        await connection.query('ALTER TABLE news_posts ADD COLUMN IF NOT EXISTS views INT DEFAULT 0');
+        await connection.query('ALTER TABLE news_posts ADD COLUMN IF NOT EXISTS image_url VARCHAR(500) DEFAULT NULL');
+      } catch (e) {
+        console.error('Alter table news_posts error:', e.message);
+      }
       const [newsRows] = await connection.query('SELECT COUNT(*) as count FROM news_posts');
+    });
+
+    // Viewed Posts Table
+    await initTable('viewed_posts', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS viewed_posts (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          post_id INT NOT NULL,
+          ip_address VARCHAR(45) NOT NULL,
+          user_agent TEXT,
+          viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (post_id) REFERENCES news_posts(id) ON DELETE CASCADE,
+          UNIQUE KEY unique_view (post_id, ip_address)
+        )
+      `);
     });
 
     // Job Opportunities Table
@@ -274,7 +329,6 @@ const initializeDatabase = async () => {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
       `);
-      // Add missing columns if they don't exist (MySQL doesn't support ADD COLUMN IF NOT EXISTS)
       const [columns] = await connection.query('SHOW COLUMNS FROM applicants');
       const existingColumns = columns.map(c => c.Field);
       const missingColumns = [
@@ -286,7 +340,21 @@ const initializeDatabase = async () => {
       for (const [field, definition] of missingColumns) {
         await connection.query(`ALTER TABLE applicants ADD COLUMN ${field} ${definition}`);
       }
-     });
+    });
+
+    // Subscribers Table
+    await initTable('subscribers', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS subscribers (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          name VARCHAR(255) DEFAULT NULL,
+          subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+      `);
+    });
 
     // Messages Table
     await initTable('messages', async () => {
@@ -300,7 +368,7 @@ const initializeDatabase = async () => {
           subject VARCHAR(255) NOT NULL,
           body TEXT,
           sent_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-          folder ENUM('inbox', 'sent', 'drafts', 'spam', 'trash') DEFAULT 'inbox',
+          folder VARCHAR(50) DEFAULT 'inbox',
           is_read TINYINT(1) DEFAULT 0,
           is_starred TINYINT(1) DEFAULT 0,
           label VARCHAR(50) DEFAULT NULL,
@@ -308,20 +376,31 @@ const initializeDatabase = async () => {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
       `);
-      const [msgRows] = await connection.query('SELECT COUNT(*) as count FROM messages');
+      try {
+        await connection.query("ALTER TABLE messages MODIFY COLUMN folder VARCHAR(50) DEFAULT 'inbox'");
+      } catch (e) {
+        console.error('Alter table messages folder error:', e.message);
+      }
     });
 
-    try {
-      await connection.query("ALTER TABLE messages MODIFY COLUMN folder VARCHAR(50) DEFAULT 'inbox'");
-    } catch (e) {
-      console.error('Alter table messages folder error:', e.message);
-    }
-
-    try {
-      await connection.query('ALTER TABLE news_posts ADD COLUMN IF NOT EXISTS content TEXT DEFAULT NULL');
-    } catch (e) {
-      console.error('Alter table news_posts content error:', e.message);
-    }
+    // Comments Table
+    await initTable('comments', async () => {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS comments (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          article_id INT NOT NULL,
+          author VARCHAR(255) NOT NULL,
+          content TEXT NOT NULL,
+          parent_id INT DEFAULT NULL,
+          likes INT DEFAULT 0,
+          is_approved TINYINT DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          FOREIGN KEY (article_id) REFERENCES news_posts(id) ON DELETE CASCADE,
+          FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+        )
+      `);
+    });
 
     // Service Agreements Table
     await initTable('service_agreements', async () => {
@@ -423,29 +502,9 @@ const initializeDatabase = async () => {
         ('App Development', 'Build For Scale', 'We build robust mobile and web applications that scale. From MVP to enterprise-grade platforms, our engineering teams deliver reliable software.', 'Software that grows with you. We engineer apps that remain fast, stable, and maintainable as your user base expands.', '["Cross-platform development", "API-first architecture", "Performance optimization", "Ongoing maintenance & support"]', '/assets/images/african_tech_team_hero_1783002251745.png', 3),
         ('Technology Consult', 'Strategic Guidance', 'We help organizations make smarter technology decisions. From digital transformation roadmaps to vendor evaluation, our consultants bring practical expertise.', 'Make the right tech bets. We cut through hype to help you choose solutions that actually move the needle.', '["Digital strategy & roadmap", "Technology assessment", "Vendor selection support", "Change management guidance"]', '/assets/images/african_developer_laptop_1783002306037.png', 4),
         ('IT Solution', 'End-to-End Support', 'We deliver comprehensive IT solutions — from infrastructure setup to managed services. Our solutions are built for reliability and cost-efficiency.', 'One partner, full coverage. We handle the heavy lifting so you can focus on running your business.', '["Infrastructure design & deployment", "Cloud migration & management", "Managed IT services", "24/7 technical support"]', '/assets/images/african_tech_board_1_1783002554188.png', 5)
-      ON DUPLICATE KEY UPDATE title = VALUES(title)
       `);
       console.log('✅ Service cards seeded');
     }
-
-    // Comments Table
-    await initTable('comments', async () => {
-      await connection.query(`
-        CREATE TABLE IF NOT EXISTS comments (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          article_id INT NOT NULL,
-          author VARCHAR(255) NOT NULL,
-          content TEXT NOT NULL,
-          parent_id INT DEFAULT NULL,
-          likes INT DEFAULT 0,
-          is_approved TINYINT DEFAULT 1,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          FOREIGN KEY (article_id) REFERENCES news_posts(id) ON DELETE CASCADE,
-          FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
-        )
-      `);
-    });
 
     console.log('✅ Database initialization complete');
   } catch (error) {
@@ -511,7 +570,7 @@ const normalizeImageUrl = (url) => {
 };
 
 // ======================
-// API ROUTES
+// API ROUTES - ALL API ROUTES MUST BE DEFINED HERE
 // ======================
 
 // Health Check
@@ -588,7 +647,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Forgot Password - Generate Reset Token
+// Forgot Password
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -637,7 +696,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 });
 
-// Reset Password with Token
+// Reset Password
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body;
@@ -693,66 +752,45 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
-// Protected Dashboard Stats
+// Stats endpoints
 app.get('/api/stats', verifyToken, async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM project_stats'
-    );
+    const [rows] = await pool.query('SELECT * FROM project_stats');
     res.json(rows);
   } catch (error) {
     console.error('❌ Stats Error:', error);
-    res.status(500).json({
-      error: 'Internal server error.',
-    });
+    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Add Stat
 app.post('/api/stats', verifyToken, async (req, res) => {
   try {
     const { title, value, description } = req.body;
-
     if (!title || !value) {
-      return res.status(400).json({
-        error: 'Title and value are required.',
-      });
+      return res.status(400).json({ error: 'Title and value are required.' });
     }
-
     const [result] = await pool.query(
       'INSERT INTO project_stats (title, value, description) VALUES (?, ?, ?)',
       [title, value, description || '']
     );
-
-    res.status(201).json({
-      id: result.insertId,
-      title,
-      value,
-      description: description || '',
-    });
+    res.status(201).json({ id: result.insertId, title, value, description: description || '' });
   } catch (error) {
     console.error('❌ Add Stat Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Update Stat
 app.put('/api/stats/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, value, description } = req.body;
-
     if (!title || !value) {
-      return res.status(400).json({
-        error: 'Title and value are required.',
-      });
+      return res.status(400).json({ error: 'Title and value are required.' });
     }
-
     await pool.query(
       'UPDATE project_stats SET title = ?, value = ?, description = ? WHERE id = ?',
       [title, value, description || '', id]
     );
-
     res.json({ id, title, value, description: description || '' });
   } catch (error) {
     console.error('❌ Update Stat Error:', error);
@@ -760,7 +798,6 @@ app.put('/api/stats/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete Stat
 app.delete('/api/stats/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -772,7 +809,6 @@ app.delete('/api/stats/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Reset Stats
 app.post('/api/stats/reset', verifyToken, async (req, res) => {
   try {
     await pool.query('DELETE FROM project_stats');
@@ -790,12 +826,10 @@ app.post('/api/stats/reset', verifyToken, async (req, res) => {
   }
 });
 
-// List Admin Users
+// Admin Users endpoints
 app.get('/api/admin/users', verifyToken, async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT id, username, created_at FROM admin_users ORDER BY id'
-    );
+    const [rows] = await pool.query('SELECT id, username, created_at FROM admin_users ORDER BY id');
     res.json(rows);
   } catch (error) {
     console.error('❌ List Users Error:', error);
@@ -803,47 +837,34 @@ app.get('/api/admin/users', verifyToken, async (req, res) => {
   }
 });
 
-// Add Admin User
 app.post('/api/admin/users', verifyToken, async (req, res) => {
   try {
     const { username, password } = req.body;
-
     if (!username || !password) {
-      return res.status(400).json({
-        error: 'Username and password are required.',
-      });
+      return res.status(400).json({ error: 'Username and password are required.' });
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       'INSERT INTO admin_users (username, password) VALUES (?, ?)',
       [username, hashedPassword]
     );
-
-    res.status(201).json({
-      id: result.insertId,
-      username,
-    });
+    res.status(201).json({ id: result.insertId, username });
   } catch (error) {
     console.error('❌ Add User Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Delete Admin User
 app.delete('/api/admin/users/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const [user] = await pool.query('SELECT * FROM admin_users WHERE id = ?', [id]);
-
     if (user.length === 0) {
       return res.status(404).json({ error: 'User not found.' });
     }
-
     if (user[0].username === 'admin') {
       return res.status(400).json({ error: 'Cannot delete the default admin user.' });
     }
-
     await pool.query('DELETE FROM admin_users WHERE id = ?', [id]);
     res.json({ success: true });
   } catch (error) {
@@ -852,24 +873,15 @@ app.delete('/api/admin/users/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Update Admin User Password
 app.put('/api/admin/users/:id/password', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { password } = req.body;
-
     if (!password || password.length < 4) {
-      return res.status(400).json({
-        error: 'Password must be at least 4 characters.',
-      });
+      return res.status(400).json({ error: 'Password must be at least 4 characters.' });
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      'UPDATE admin_users SET password = ? WHERE id = ?',
-      [hashedPassword, id]
-    );
-
+    await pool.query('UPDATE admin_users SET password = ? WHERE id = ?', [hashedPassword, id]);
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Update Password Error:', error);
@@ -881,7 +893,6 @@ app.put('/api/admin/users/:id/password', verifyToken, async (req, res) => {
 // PRODUCT ENDPOINTS
 // ======================
 
-// List Products
 app.get('/api/products', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM product_cards ORDER BY id');
@@ -902,16 +913,13 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// Get Product by ID
 app.get('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT * FROM product_cards WHERE id = ?', [id]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Product not found.' });
     }
-
     const row = rows[0];
     res.json({
       id: row.id,
@@ -929,89 +937,41 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// Add Product
 app.post('/api/products', async (req, res) => {
   try {
     const { name, tagline, category, iconType, logoUrl, description, keyFeatures } = req.body;
-
     if (!name || !tagline) {
-      return res.status(400).json({
-        error: 'Name and tagline are required.',
-      });
+      return res.status(400).json({ error: 'Name and tagline are required.' });
     }
-
     const [result] = await pool.query(
       'INSERT INTO product_cards (title, subtitle, category, icon_name, logo_url, description, key_features) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [
-        name,
-        tagline,
-        category || null,
-        iconType || 'trending',
-        normalizeImageUrl(logoUrl),
-        description || null,
-        keyFeatures && Array.isArray(keyFeatures) ? JSON.stringify(keyFeatures) : JSON.stringify([]),
-      ]
+      [name, tagline, category || null, iconType || 'trending', normalizeImageUrl(logoUrl), description || null, keyFeatures && Array.isArray(keyFeatures) ? JSON.stringify(keyFeatures) : JSON.stringify([])]
     );
-
-    res.status(201).json({
-      id: result.insertId,
-      name,
-      tagline,
-      category: category || null,
-      iconType: iconType || 'trending',
-      logoUrl: logoUrl || null,
-      description: description || null,
-      keyFeatures: keyFeatures || [],
-    });
+    res.status(201).json({ id: result.insertId, name, tagline, category: category || null, iconType: iconType || 'trending', logoUrl: logoUrl || null, description: description || null, keyFeatures: keyFeatures || [] });
   } catch (error) {
     console.error('❌ Add Product Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Update Product
 app.put('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, tagline, category, iconType, logoUrl, description, keyFeatures } = req.body;
-
     if (!name || !tagline) {
-      return res.status(400).json({
-        error: 'Name and tagline are required.',
-      });
+      return res.status(400).json({ error: 'Name and tagline are required.' });
     }
-
     await pool.query(
       'UPDATE product_cards SET title = ?, subtitle = ?, category = ?, icon_name = ?, logo_url = ?, description = ?, key_features = ? WHERE id = ?',
-      [
-        name,
-        tagline,
-        category || null,
-        iconType || 'trending',
-        normalizeImageUrl(logoUrl),
-        description || null,
-        keyFeatures && Array.isArray(keyFeatures) ? JSON.stringify(keyFeatures) : JSON.stringify([]),
-        id,
-      ]
+      [name, tagline, category || null, iconType || 'trending', normalizeImageUrl(logoUrl), description || null, keyFeatures && Array.isArray(keyFeatures) ? JSON.stringify(keyFeatures) : JSON.stringify([]), id]
     );
-
-    res.json({ 
-      id: Number(id), 
-      name, 
-      tagline, 
-      category: category || null, 
-      iconType: iconType || 'trending', 
-      logoUrl: logoUrl || null, 
-      description: description || null, 
-      keyFeatures: keyFeatures || [] 
-    });
+    res.json({ id: Number(id), name, tagline, category: category || null, iconType: iconType || 'trending', logoUrl: logoUrl || null, description: description || null, keyFeatures: keyFeatures || [] });
   } catch (error) {
     console.error('❌ Update Product Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Delete Product
 app.delete('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1027,7 +987,6 @@ app.delete('/api/products/:id', async (req, res) => {
 // SERVICE ENDPOINTS
 // ======================
 
-// List Services
 app.get('/api/services', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM service_cards ORDER BY display_order, id');
@@ -1048,16 +1007,13 @@ app.get('/api/services', async (req, res) => {
   }
 });
 
-// Get Service by ID
 app.get('/api/services/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT * FROM service_cards WHERE id = ?', [id]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Service not found.' });
     }
-
     const row = rows[0];
     res.json({
       id: row.id,
@@ -1075,85 +1031,41 @@ app.get('/api/services/:id', async (req, res) => {
   }
 });
 
-// Add Service
 app.post('/api/services', async (req, res) => {
   try {
     const { title, subtitle, description, summary, features, imageUrl, displayOrder } = req.body;
-
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-
     const [result] = await pool.query(
       'INSERT INTO service_cards (title, subtitle, description, summary, features, image_url, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [
-        title,
-        subtitle || null,
-        description || null,
-        summary || null,
-        features && Array.isArray(features) ? JSON.stringify(features) : JSON.stringify([]),
-        normalizeImageUrl(imageUrl),
-        displayOrder || 0,
-      ]
+      [title, subtitle || null, description || null, summary || null, features && Array.isArray(features) ? JSON.stringify(features) : JSON.stringify([]), normalizeImageUrl(imageUrl), displayOrder || 0]
     );
-
-    res.status(201).json({
-      id: result.insertId,
-      title,
-      subtitle: subtitle || null,
-      description: description || null,
-      summary: summary || null,
-      features: features || [],
-      imageUrl: imageUrl || null,
-      displayOrder: displayOrder || 0,
-    });
+    res.status(201).json({ id: result.insertId, title, subtitle: subtitle || null, description: description || null, summary: summary || null, features: features || [], imageUrl: imageUrl || null, displayOrder: displayOrder || 0 });
   } catch (error) {
     console.error('❌ Add Service Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Update Service
 app.put('/api/services/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { title, subtitle, description, summary, features, imageUrl, displayOrder } = req.body;
-
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-
     await pool.query(
       'UPDATE service_cards SET title = ?, subtitle = ?, description = ?, summary = ?, features = ?, image_url = ?, display_order = ? WHERE id = ?',
-      [
-        title,
-        subtitle || null,
-        description || null,
-        summary || null,
-        features && Array.isArray(features) ? JSON.stringify(features) : JSON.stringify([]),
-        normalizeImageUrl(imageUrl),
-        displayOrder || 0,
-        id,
-      ]
+      [title, subtitle || null, description || null, summary || null, features && Array.isArray(features) ? JSON.stringify(features) : JSON.stringify([]), normalizeImageUrl(imageUrl), displayOrder || 0, id]
     );
-
-    res.json({
-      id: Number(id),
-      title,
-      subtitle: subtitle || null,
-      description: description || null,
-      summary: summary || null,
-      features: features || [],
-      imageUrl: imageUrl || null,
-      displayOrder: displayOrder || 0,
-    });
+    res.json({ id: Number(id), title, subtitle: subtitle || null, description: description || null, summary: summary || null, features: features || [], imageUrl: imageUrl || null, displayOrder: displayOrder || 0 });
   } catch (error) {
     console.error('❌ Update Service Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Delete Service
 app.delete('/api/services/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1161,6 +1073,56 @@ app.delete('/api/services/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('❌ Delete Service Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// ======================
+// SUBSCRIBERS ENDPOINTS
+// ======================
+
+app.post('/api/subscribe', async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanName = String(name || '').trim();
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return res.status(400).json({ error: 'A valid email address is required.' });
+    }
+
+    const [existing] = await pool.query('SELECT id FROM subscribers WHERE email = ?', [cleanEmail]);
+    if (existing.length > 0) {
+      return res.status(200).json({ success: true, message: 'You are already subscribed!' });
+    }
+
+    await pool.query('INSERT INTO subscribers (email, name) VALUES (?, ?)', [cleanEmail, cleanName || null]);
+    res.status(201).json({ success: true, message: 'Successfully subscribed!' });
+  } catch (error) {
+    console.error('❌ Subscribe Error:', error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(200).json({ success: true, message: 'You are already subscribed!' });
+    }
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.get('/api/subscribers', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM subscribers ORDER BY subscribed_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Subscribers Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.get('/api/subscribers/count', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM subscribers');
+    res.json({ count: rows[0]?.count || 0 });
+  } catch (error) {
+    console.error('❌ Subscribers count Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -1192,26 +1154,14 @@ app.get('/api/partners', async (req, res) => {
 app.post('/api/partners', async (req, res) => {
   try {
     const { name, joined, industry, location, contactName, contactEmail, status } = req.body;
-
     if (!name || !industry || !location) {
       return res.status(400).json({ error: 'Name, industry, and location are required.' });
     }
-
     const [result] = await pool.query(
       'INSERT INTO partners (name, joined, industry, location, contact_name, contact_email, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [name, joined || null, industry, location, contactName || null, contactEmail || null, status || 'ACTIVE']
     );
-
-    res.status(201).json({ 
-      id: result.insertId, 
-      name, 
-      joined: joined || null, 
-      industry, 
-      location, 
-      contactName: contactName || null, 
-      contactEmail: contactEmail || null, 
-      status: status || 'ACTIVE' 
-    });
+    res.status(201).json({ id: result.insertId, name, joined: joined || null, industry, location, contactName: contactName || null, contactEmail: contactEmail || null, status: status || 'ACTIVE' });
   } catch (error) {
     console.error('❌ Add Partner Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -1222,26 +1172,14 @@ app.put('/api/partners/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, joined, industry, location, contactName, contactEmail, status } = req.body;
-
     if (!name || !industry || !location) {
       return res.status(400).json({ error: 'Name, industry, and location are required.' });
     }
-
     await pool.query(
       'UPDATE partners SET name = ?, joined = ?, industry = ?, location = ?, contact_name = ?, contact_email = ?, status = ? WHERE id = ?',
       [name, joined || null, industry, location, contactName || null, contactEmail || null, status || 'ACTIVE', id]
     );
-
-    res.json({ 
-      id: Number(id), 
-      name, 
-      joined: joined || null, 
-      industry, 
-      location, 
-      contactName: contactName || null, 
-      contactEmail: contactEmail || null, 
-      status: status || 'ACTIVE' 
-    });
+    res.json({ id: Number(id), name, joined: joined || null, industry, location, contactName: contactName || null, contactEmail: contactEmail || null, status: status || 'ACTIVE' });
   } catch (error) {
     console.error('❌ Update Partner Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -1259,23 +1197,15 @@ app.delete('/api/partners/:id', async (req, res) => {
   }
 });
 
-// Terminate / Reactivate Partner (toggles status between ACTIVE and TERMINATED)
 app.put('/api/partners/:id/terminate', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT status FROM partners WHERE id = ?', [id]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Partner not found.' });
     }
-
     const newStatus = rows[0].status === 'TERMINATED' ? 'ACTIVE' : 'TERMINATED';
-
-    const [result] = await pool.query(
-      'UPDATE partners SET status = ? WHERE id = ?',
-      [newStatus, id]
-    );
-
+    await pool.query('UPDATE partners SET status = ? WHERE id = ?', [newStatus, id]);
     res.json({ success: true, id: Number(id), status: newStatus });
   } catch (error) {
     console.error('❌ Terminate Partner Error:', error);
@@ -1289,7 +1219,7 @@ app.put('/api/partners/:id/terminate', async (req, res) => {
 
 app.get('/api/advisors', async (req, res) => {
   try {
-      const [rows] = await pool.query('SELECT * FROM advisors ORDER BY advisor_order, id');
+    const [rows] = await pool.query('SELECT * FROM advisors ORDER BY advisor_order, id');
     res.json(rows.map((row) => {
       const isActiveRaw = row.is_active;
       const isActive = Buffer.isBuffer(isActiveRaw) ? isActiveRaw[0] === 1 : Number(isActiveRaw) === 1;
@@ -1316,29 +1246,14 @@ app.get('/api/advisors', async (req, res) => {
 app.post('/api/advisors', async (req, res) => {
   try {
     const { firstName, lastName, roleId, advisorOrder, email, expertise, bio, imageUrl, profileLink, isActive } = req.body;
-
     if (!firstName) {
       return res.status(400).json({ error: 'First name is required.' });
     }
-
     const [result] = await pool.query(
       'INSERT INTO advisors (first_name, last_name, role_id, advisor_order, is_active, image_url, profile_link, bio, email, expertise) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [firstName, lastName || null, roleId || 0, advisorOrder || 0, isActive ? 1 : 1, normalizeImageUrl(imageUrl), profileLink || null, bio || null, email || null, expertise || null]
     );
-
-    res.status(201).json({ 
-      id: result.insertId, 
-      firstName, 
-      lastName, 
-      roleId: roleId || 0, 
-      order: advisorOrder || 0, 
-      isActive: isActive ? true : true, 
-      imageUrl: imageUrl || null, 
-      profileLink: profileLink || null, 
-      bio: bio || null,
-      email: email || null,
-      expertise: expertise || null,
-    });
+    res.status(201).json({ id: result.insertId, firstName, lastName, roleId: roleId || 0, order: advisorOrder || 0, isActive: isActive ? true : true, imageUrl: imageUrl || null, profileLink: profileLink || null, bio: bio || null, email: email || null, expertise: expertise || null });
   } catch (error) {
     console.error('❌ Add Advisor Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -1349,29 +1264,14 @@ app.put('/api/advisors/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { firstName, lastName, roleId, advisorOrder, email, expertise, bio, imageUrl, profileLink, isActive } = req.body;
-
     if (!firstName) {
       return res.status(400).json({ error: 'First name is required.' });
     }
-
     await pool.query(
       'UPDATE advisors SET first_name = ?, last_name = ?, role_id = ?, advisor_order = ?, is_active = ?, image_url = ?, profile_link = ?, bio = ?, email = ?, expertise = ? WHERE id = ?',
       [firstName, lastName || null, roleId || 0, advisorOrder || 0, isActive ? 1 : 0, normalizeImageUrl(imageUrl), profileLink || null, bio || null, email || null, expertise || null, id]
     );
-
-    res.json({ 
-      id: Number(id), 
-      firstName, 
-      lastName, 
-      roleId: roleId || 0, 
-      order: advisorOrder || 0, 
-      isActive: isActive ? true : false, 
-      imageUrl: imageUrl || null, 
-      profileLink: profileLink || null, 
-      bio: bio || null,
-      email: email || null,
-      expertise: expertise || null,
-    });
+    res.json({ id: Number(id), firstName, lastName, roleId: roleId || 0, order: advisorOrder || 0, isActive: isActive ? true : false, imageUrl: imageUrl || null, profileLink: profileLink || null, bio: bio || null, email: email || null, expertise: expertise || null });
   } catch (error) {
     console.error('❌ Update Advisor Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -1395,7 +1295,13 @@ app.delete('/api/advisors/:id', async (req, res) => {
 
 app.get('/api/news', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM news_posts ORDER BY publish_date DESC, id DESC');
+    const [rows] = await pool.query(`
+      SELECT n.*, COUNT(c.id) as comments
+      FROM news_posts n
+      LEFT JOIN comments c ON c.article_id = n.id AND c.is_approved = 1
+      GROUP BY n.id
+      ORDER BY n.publish_date DESC, n.id DESC
+    `);
     res.json(rows.map((row) => ({
       id: row.id,
       title: row.title,
@@ -1404,6 +1310,9 @@ app.get('/api/news', async (req, res) => {
       date: normalizeDate(row.publish_date),
       excerpt: row.excerpt,
       content: row.content || null,
+      views: row.views || 0,
+      comments: row.comments || 0,
+      imageUrl: row.image_url || null,
     })));
   } catch (error) {
     console.error('❌ List News Error:', error);
@@ -1411,28 +1320,90 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
+app.get('/api/news/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query(`
+      SELECT n.*, COUNT(c.id) as comments
+      FROM news_posts n
+      LEFT JOIN comments c ON c.article_id = n.id AND c.is_approved = 1
+      WHERE n.id = ?
+      GROUP BY n.id
+    `, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'News post not found.' });
+    }
+    const row = rows[0];
+    res.json({
+      id: row.id,
+      title: row.title,
+      category: row.category,
+      author: row.author,
+      date: normalizeDate(row.publish_date),
+      excerpt: row.excerpt,
+      content: row.content || null,
+      views: row.views || 0,
+      imageUrl: row.image_url || null,
+      comments: row.comments || 0,
+    });
+  } catch (error) {
+    console.error('❌ Get News Error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/news/:id/view', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid article ID' });
+    }
+
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.headers['user-agent'] || null;
+
+    try {
+      const [existing] = await pool.query(
+        'SELECT id FROM viewed_posts WHERE post_id = ? AND ip_address = ?',
+        [id, ipAddress]
+      );
+
+      if (existing.length === 0) {
+        await pool.query(
+          'INSERT INTO viewed_posts (post_id, ip_address, user_agent) VALUES (?, ?, ?)',
+          [id, ipAddress, userAgent]
+        );
+        await pool.query('UPDATE news_posts SET views = views + 1 WHERE id = ?', [id]);
+      }
+
+      const [rows] = await pool.query('SELECT views FROM news_posts WHERE id = ?', [id]);
+      res.json({ success: true, views: rows[0]?.views || 0 });
+    } catch (tableError) {
+      if (tableError.code === 'ER_NO_SUCH_TABLE') {
+        await pool.query('UPDATE news_posts SET views = views + 1 WHERE id = ?', [id]);
+        const [rows] = await pool.query('SELECT views FROM news_posts WHERE id = ?', [id]);
+        res.json({ success: true, views: rows[0]?.views || 0 });
+      } else {
+        throw tableError;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Track view error:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 app.post('/api/news', async (req, res) => {
   try {
-    const { title, category, author, date, excerpt, content } = req.body;
-
+    const { title, category, author, date, excerpt, content, imageUrl } = req.body;
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-
     const [result] = await pool.query(
-      'INSERT INTO news_posts (title, category, author, publish_date, excerpt, content) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, category || null, author || null, date || null, excerpt || null, content || null]
+      'INSERT INTO news_posts (title, category, author, publish_date, excerpt, content, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, category || null, author || null, date || null, excerpt || null, content || null, imageUrl || null]
     );
-
-    res.status(201).json({ 
-      id: result.insertId, 
-      title, 
-      category: category || null, 
-      author: author || null, 
-      date: date || null, 
-      excerpt: excerpt || null,
-      content: content || null,
-    });
+    res.status(201).json({ id: result.insertId, title, category: category || null, author: author || null, date: date || null, excerpt: excerpt || null, content: content || null, imageUrl: imageUrl || null });
   } catch (error) {
     console.error('❌ Add News Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -1442,26 +1413,15 @@ app.post('/api/news', async (req, res) => {
 app.put('/api/news/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, category, author, date, excerpt, content } = req.body;
-
+    const { title, category, author, date, excerpt, content, imageUrl } = req.body;
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-
     await pool.query(
-      'UPDATE news_posts SET title = ?, category = ?, author = ?, publish_date = ?, excerpt = ?, content = ? WHERE id = ?',
-      [title, category || null, author || null, date || null, excerpt || null, content || null, id]
+      'UPDATE news_posts SET title = ?, category = ?, author = ?, publish_date = ?, excerpt = ?, content = ?, image_url = ? WHERE id = ?',
+      [title, category || null, author || null, date || null, excerpt || null, content || null, imageUrl || null, id]
     );
-
-    res.json({ 
-      id: Number(id), 
-      title, 
-      category: category || null, 
-      author: author || null, 
-      date: date || null, 
-      excerpt: excerpt || null,
-      content: content || null,
-    });
+    res.json({ id: Number(id), title, category: category || null, author: author || null, date: date || null, excerpt: excerpt || null, content: content || null, imageUrl: imageUrl || null });
   } catch (error) {
     console.error('❌ Update News Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
@@ -1483,16 +1443,141 @@ app.delete('/api/news/:id', async (req, res) => {
 // COMMENTS ENDPOINTS
 // ======================
 
-// Get comments for an article (with replies nested)
+// Debug endpoint to check comment status
+app.get('/api/comments/debug/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [comment] = await pool.query('SELECT * FROM comments WHERE id = ?', [id]);
+    const [replies] = await pool.query('SELECT * FROM comments WHERE parent_id = ?', [id]);
+    const [references] = await pool.query('SELECT COUNT(*) as count FROM comments WHERE parent_id = ?', [id]);
+    res.json({
+      comment: comment[0] || null,
+      replies: replies,
+      replyCount: replies.length,
+      hasReferences: references[0].count > 0
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get comments by article
+app.get('/api/comments/by-article', async (req, res) => {
+  try {
+    const { articleId } = req.query;
+
+    if (articleId && !isNaN(articleId)) {
+      const [comments] = await pool.query(
+        `SELECT c.*, 
+                (SELECT COUNT(*) FROM comments WHERE parent_id = c.id AND is_approved = 1) as reply_count
+         FROM comments c
+         WHERE c.article_id = ? AND c.parent_id IS NULL AND c.is_approved = 1
+         ORDER BY c.created_at DESC`,
+        [articleId]
+      );
+
+      const commentsWithReplies = await Promise.all(
+        comments.map(async (comment) => {
+          const [replies] = await pool.query(
+            `SELECT * FROM comments 
+             WHERE parent_id = ? AND is_approved = 1 
+             ORDER BY created_at ASC`,
+            [comment.id]
+          );
+          return {
+            ...comment,
+            _id: comment.id,
+            createdAt: comment.created_at,
+            isApproved: Boolean(comment.is_approved),
+            replies: replies.map(r => ({
+              ...r,
+              _id: r.id,
+              createdAt: r.created_at,
+              isApproved: Boolean(r.is_approved)
+            }))
+          };
+        })
+      );
+
+      res.json({
+        articleId: parseInt(articleId),
+        totalComments: commentsWithReplies.reduce((sum, c) => sum + 1 + c.replies.length, 0),
+        comments: commentsWithReplies
+      });
+      return;
+    }
+
+    const [summaryRows] = await pool.query(`
+      SELECT article_id, COUNT(*) as totalComments
+      FROM comments
+      WHERE is_approved = 1
+      GROUP BY article_id
+    `);
+
+    const articlesWithComments = await Promise.all(
+      summaryRows.map(async (row) => {
+        const [comments] = await pool.query(
+          `SELECT id, article_id, author, content, parent_id, likes, is_approved, created_at, updated_at
+           FROM comments
+           WHERE article_id = ? AND is_approved = 1
+           ORDER BY created_at ASC`,
+          [row.article_id]
+        );
+
+        const commentsWithReplies = await Promise.all(
+          comments
+            .filter((c) => c.parent_id === null)
+            .map(async (comment) => {
+              const [replies] = await pool.query(
+                `SELECT id, article_id, author, content, parent_id, likes, is_approved, created_at, updated_at
+                 FROM comments
+                 WHERE parent_id = ? AND is_approved = 1
+                 ORDER BY created_at ASC`,
+                [comment.id]
+              );
+              return {
+                ...comment,
+                _id: comment.id,
+                createdAt: comment.created_at,
+                isApproved: Boolean(comment.is_approved),
+                replies: replies.map((r) => ({
+                  ...r,
+                  _id: r.id,
+                  createdAt: r.created_at,
+                  isApproved: Boolean(r.is_approved),
+                })),
+              };
+            })
+        );
+
+        return {
+          articleId: row.article_id,
+          totalComments: row.totalComments,
+          comments: commentsWithReplies,
+        };
+      })
+    );
+
+    res.json(articlesWithComments);
+  } catch (error) {
+    console.error('❌ Comments by article Error:', error);
+    res.status(500).json({ error: 'Internal server error.', details: error.message });
+  }
+});
+
+// Get comments for an article
 app.get('/api/comments/:articleId', async (req, res) => {
   try {
     const { articleId } = req.params;
+    if (!articleId || isNaN(articleId)) {
+      return res.status(400).json({ error: 'Invalid article ID' });
+    }
+
     const [rows] = await pool.query(
       'SELECT * FROM comments WHERE article_id = ? AND parent_id IS NULL AND is_approved = 1 ORDER BY created_at DESC',
       [articleId]
     );
 
-    // Fetch replies for each top-level comment
     const commentsWithReplies = await Promise.all(rows.map(async (comment) => {
       const [replies] = await pool.query(
         'SELECT * FROM comments WHERE parent_id = ? AND is_approved = 1 ORDER BY created_at ASC',
@@ -1503,14 +1588,58 @@ app.get('/api/comments/:articleId', async (req, res) => {
         _id: comment.id,
         createdAt: comment.created_at,
         isApproved: Boolean(comment.is_approved),
-        replies: replies.map(r => ({ ...r, _id: r.id, createdAt: r.created_at, isApproved: Boolean(r.is_approved) })),
+        replies: replies.map(r => ({
+          ...r,
+          _id: r.id,
+          createdAt: r.created_at,
+          isApproved: Boolean(r.is_approved)
+        })),
       };
     }));
 
     res.json(commentsWithReplies);
   } catch (error) {
     console.error('❌ List Comments Error:', error);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: 'Internal server error.', details: error.message });
+  }
+});
+
+// Alias for blog frontend
+app.get('/api/articles/:articleId/comments', async (req, res) => {
+  try {
+    const { articleId } = req.params;
+    if (!articleId || isNaN(articleId)) {
+      return res.status(400).json({ error: 'Invalid article ID' });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT * FROM comments WHERE article_id = ? AND parent_id IS NULL AND is_approved = 1 ORDER BY created_at DESC',
+      [articleId]
+    );
+
+    const commentsWithReplies = await Promise.all(rows.map(async (comment) => {
+      const [replies] = await pool.query(
+        'SELECT * FROM comments WHERE parent_id = ? AND is_approved = 1 ORDER BY created_at ASC',
+        [comment.id]
+      );
+      return {
+        ...comment,
+        _id: comment.id,
+        createdAt: comment.created_at,
+        isApproved: Boolean(comment.is_approved),
+        replies: replies.map(r => ({
+          ...r,
+          _id: r.id,
+          createdAt: r.created_at,
+          isApproved: Boolean(r.is_approved)
+        })),
+      };
+    }));
+
+    res.json(commentsWithReplies);
+  } catch (error) {
+    console.error('❌ List Comments Error:', error);
+    res.status(500).json({ error: 'Internal server error.', details: error.message });
   }
 });
 
@@ -1521,32 +1650,165 @@ app.post('/api/comments', async (req, res) => {
     const cleanAuthor = String(author || '').trim();
     const cleanContent = String(content || '').trim();
 
-    if (!Number.isInteger(Number(articleId)) || !cleanAuthor || !cleanContent) {
-      return res.status(400).json({ error: 'Article ID, author, and content are required.' });
+    if (!Number.isInteger(Number(articleId)) || articleId < 1) {
+      return res.status(400).json({ error: 'Valid article ID is required.' });
     }
-    if (cleanAuthor.length > 80 || cleanContent.length > 2000) {
-      return res.status(400).json({ error: 'Your name or comment is too long.' });
+    if (!cleanAuthor) {
+      return res.status(400).json({ error: 'Author name is required.' });
+    }
+    if (!cleanContent) {
+      return res.status(400).json({ error: 'Comment content is required.' });
+    }
+    if (cleanAuthor.length > 80) {
+      return res.status(400).json({ error: 'Author name cannot exceed 80 characters.' });
+    }
+    if (cleanContent.length > 2000) {
+      return res.status(400).json({ error: 'Comment cannot exceed 2000 characters.' });
+    }
+
+    const [articleCheck] = await pool.query('SELECT id FROM news_posts WHERE id = ?', [articleId]);
+    if (articleCheck.length === 0) {
+      return res.status(404).json({ error: 'Article not found.' });
+    }
+
+    if (parentId) {
+      const [parentCheck] = await pool.query(
+        'SELECT id FROM comments WHERE id = ? AND article_id = ?',
+        [parentId, articleId]
+      );
+      if (parentCheck.length === 0) {
+        return res.status(404).json({ error: 'Parent comment not found.' });
+      }
     }
 
     const [result] = await pool.query(
-      'INSERT INTO comments (article_id, author, content, parent_id) VALUES (?, ?, ?, ?)',
-      [articleId, cleanAuthor, cleanContent, parentId || null]
+      'INSERT INTO comments (article_id, author, content, parent_id, is_approved) VALUES (?, ?, ?, ?, ?)',
+      [articleId, cleanAuthor, cleanContent, parentId || null, 1]
     );
 
-    res.status(201).json({ 
-      success: true, 
-      id: result.insertId,
-      articleId: Number(articleId),
-      author: cleanAuthor,
-      content: cleanContent,
-      parentId: parentId || null,
-      likes: 0,
-      isApproved: true,
-      createdAt: new Date().toISOString(),
+    const [newComment] = await pool.query('SELECT * FROM comments WHERE id = ?', [result.insertId]);
+
+    res.status(201).json({
+      success: true,
+      comment: {
+        ...newComment[0],
+        _id: newComment[0].id,
+        createdAt: newComment[0].created_at,
+        isApproved: Boolean(newComment[0].is_approved),
+        replies: []
+      }
     });
   } catch (error) {
     console.error('❌ Add Comment Error:', error);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: 'Unable to add comment. Please try again.', details: error.message });
+  }
+});
+
+// DELETE a comment - FIXED VERSION
+app.delete('/api/comments/:id', async (req, res) => {
+  console.log(`🔍 DELETE request received for comment ID: ${req.params.id}`);
+  try {
+    const { id } = req.params;
+    
+    if (!id || isNaN(id)) {
+      console.log('❌ Invalid comment ID:', id);
+      return res.status(400).json({ error: 'Invalid comment ID' });
+    }
+
+    // Check if comment exists
+    const [existingComment] = await pool.query(
+      'SELECT id, parent_id FROM comments WHERE id = ?',
+      [id]
+    );
+
+    if (existingComment.length === 0) {
+      console.log('❌ Comment not found:', id);
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    const comment = existingComment[0];
+    let deletedReplies = 0;
+
+    // If it's a parent comment, delete all its replies first
+    if (comment.parent_id === null) {
+      const [replies] = await pool.query(
+        'SELECT id FROM comments WHERE parent_id = ?',
+        [id]
+      );
+      deletedReplies = replies.length;
+      console.log(`📝 Deleting ${deletedReplies} replies for comment ${id}`);
+      
+      await pool.query('DELETE FROM comments WHERE parent_id = ?', [id]);
+    }
+
+    // Delete the comment itself
+    const [result] = await pool.query('DELETE FROM comments WHERE id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      console.log('❌ Comment could not be deleted:', id);
+      return res.status(404).json({ error: 'Comment could not be deleted' });
+    }
+
+    console.log(`✅ Comment ${id} deleted successfully`);
+    res.json({ 
+      success: true, 
+      message: 'Comment deleted successfully',
+      deletedCommentId: parseInt(id),
+      deletedReplies: deletedReplies
+    });
+  } catch (error) {
+    console.error('❌ Delete Comment Error:', error);
+    
+    // If there's a foreign key constraint error, try a more aggressive approach
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.code === 'ER_NO_REFERENCED_ROW') {
+      try {
+        console.log('🔄 Attempting force delete with foreign key checks disabled');
+        await pool.query('SET FOREIGN_KEY_CHECKS = 0');
+        await pool.query('DELETE FROM comments WHERE parent_id = ?', [req.params.id]);
+        await pool.query('DELETE FROM comments WHERE id = ?', [req.params.id]);
+        await pool.query('SET FOREIGN_KEY_CHECKS = 1');
+        
+        console.log('✅ Force delete successful');
+        return res.json({ 
+          success: true, 
+          message: 'Comment and all replies deleted successfully',
+          deletedCommentId: parseInt(req.params.id)
+        });
+      } catch (retryError) {
+        await pool.query('SET FOREIGN_KEY_CHECKS = 1');
+        console.error('❌ Retry delete failed:', retryError);
+        return res.status(500).json({ 
+          error: 'Unable to delete comment. Please try again.',
+          details: retryError.message 
+        });
+      }
+    }
+    
+    res.status(500).json({ 
+      error: 'Unable to delete comment. Please try again.',
+      details: error.message 
+    });
+  }
+});
+
+// Delete all comments for an article
+app.delete('/api/comments/article/:articleId', async (req, res) => {
+  try {
+    const { articleId } = req.params;
+    if (!articleId || isNaN(articleId)) {
+      return res.status(400).json({ error: 'Invalid article ID' });
+    }
+
+    const [articleCheck] = await pool.query('SELECT id FROM news_posts WHERE id = ?', [articleId]);
+    if (articleCheck.length === 0) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const [result] = await pool.query('DELETE FROM comments WHERE article_id = ?', [articleId]);
+    res.json({ success: true, message: `Deleted ${result.affectedRows} comments`, deletedCount: result.affectedRows });
+  } catch (error) {
+    console.error('❌ Delete Article Comments Error:', error);
+    res.status(500).json({ error: 'Unable to delete comments. Please try again.', details: error.message });
   }
 });
 
@@ -1554,11 +1816,11 @@ app.post('/api/comments', async (req, res) => {
 app.put('/api/comments/:id/like', async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await pool.query(
-      'UPDATE comments SET likes = likes + 1 WHERE id = ?',
-      [id]
-    );
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid comment ID' });
+    }
 
+    const [result] = await pool.query('UPDATE comments SET likes = likes + 1 WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Comment not found.' });
     }
@@ -1567,7 +1829,7 @@ app.put('/api/comments/:id/like', async (req, res) => {
     res.json({ likes: rows[0].likes });
   } catch (error) {
     console.error('❌ Like Comment Error:', error);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: 'Unable to like comment. Please try again.', details: error.message });
   }
 });
 
@@ -1605,10 +1867,7 @@ app.post('/api/service-agreements', async (req, res) => {
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-    const [result] = await pool.query(
-      'INSERT INTO service_agreements (title, content) VALUES (?, ?)',
-      [title, content || null]
-    );
+    const [result] = await pool.query('INSERT INTO service_agreements (title, content) VALUES (?, ?)', [title, content || null]);
     const [newAgreement] = await pool.query('SELECT * FROM service_agreements WHERE id = ?', [result.insertId]);
     res.status(201).json(newAgreement[0]);
   } catch (error) {
@@ -1624,10 +1883,7 @@ app.put('/api/service-agreements/:id', async (req, res) => {
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-    await pool.query(
-      'UPDATE service_agreements SET title = ?, content = ? WHERE id = ?',
-      [title, content || null, id]
-    );
+    await pool.query('UPDATE service_agreements SET title = ?, content = ? WHERE id = ?', [title, content || null, id]);
     const [updated] = await pool.query('SELECT * FROM service_agreements WHERE id = ?', [id]);
     res.json(updated[0]);
   } catch (error) {
@@ -1757,10 +2013,7 @@ app.post('/api/privacy-policies', async (req, res) => {
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-    const [result] = await pool.query(
-      'INSERT INTO privacy_policies (title, content) VALUES (?, ?)',
-      [title, content || null]
-    );
+    const [result] = await pool.query('INSERT INTO privacy_policies (title, content) VALUES (?, ?)', [title, content || null]);
     const [newPolicy] = await pool.query('SELECT * FROM privacy_policies WHERE id = ?', [result.insertId]);
     res.status(201).json(newPolicy[0]);
   } catch (error) {
@@ -1776,10 +2029,7 @@ app.put('/api/privacy-policies/:id', async (req, res) => {
     if (!title) {
       return res.status(400).json({ error: 'Title is required.' });
     }
-    await pool.query(
-      'UPDATE privacy_policies SET title = ?, content = ? WHERE id = ?',
-      [title, content || null, id]
-    );
+    await pool.query('UPDATE privacy_policies SET title = ?, content = ? WHERE id = ?', [title, content || null, id]);
     const [updated] = await pool.query('SELECT * FROM privacy_policies WHERE id = ?', [id]);
     res.json(updated[0]);
   } catch (error) {
@@ -1955,7 +2205,6 @@ app.delete('/api/jurisdictions/:id', async (req, res) => {
 // JOB OPPORTUNITIES ENDPOINTS
 // ======================
 
-// List Job Opportunities
 app.get('/api/jobs', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM job_opportunities ORDER BY id');
@@ -1966,16 +2215,13 @@ app.get('/api/jobs', async (req, res) => {
   }
 });
 
-// Get Job by ID
 app.get('/api/jobs/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT * FROM job_opportunities WHERE id = ?', [id]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Job not found.' });
     }
-
     res.json({ ...rows[0], keyRequirements: rows[0].key_requirements || '' });
   } catch (error) {
     console.error('❌ Get Job Error:', error);
@@ -1983,72 +2229,41 @@ app.get('/api/jobs/:id', async (req, res) => {
   }
 });
 
-// Add Job Opportunity
 app.post('/api/jobs', verifyToken, async (req, res) => {
   try {
     const { title, location, type, keyRequirements, description, applications, status } = req.body;
-
     if (!title || !location || !type) {
-      return res.status(400).json({
-        error: 'Title, location, and type are required.',
-      });
+      return res.status(400).json({ error: 'Title, location, and type are required.' });
     }
-
     const [result] = await pool.query(
       'INSERT INTO job_opportunities (title, location, type, key_requirements, description, applications, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [title, location, type, keyRequirements || null, description || null, applications || 0, status || 'Active']
     );
-
-    res.status(201).json({
-      id: result.insertId,
-      title,
-      location,
-      type,
-      keyRequirements: keyRequirements || null,
-      description: description || null,
-      applications: applications || 0,
-      status: status || 'Active',
-    });
+    res.status(201).json({ id: result.insertId, title, location, type, keyRequirements: keyRequirements || null, description: description || null, applications: applications || 0, status: status || 'Active' });
   } catch (error) {
     console.error('❌ Add Job Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Update Job Opportunity
 app.put('/api/jobs/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, location, type, keyRequirements, description, applications, status } = req.body;
-
     if (!title || !location || !type) {
-      return res.status(400).json({
-        error: 'Title, location, and type are required.',
-      });
+      return res.status(400).json({ error: 'Title, location, and type are required.' });
     }
-
     await pool.query(
       'UPDATE job_opportunities SET title = ?, location = ?, type = ?, key_requirements = ?, description = ?, applications = ?, status = ? WHERE id = ?',
       [title, location, type, keyRequirements || null, description || null, applications || 0, status || 'Active', id]
     );
-
-    res.json({
-      id: Number(id),
-      title,
-      location,
-      type,
-      keyRequirements: keyRequirements || null,
-      description: description || null,
-      applications: applications || 0,
-      status: status || 'Active',
-    });
+    res.json({ id: Number(id), title, location, type, keyRequirements: keyRequirements || null, description: description || null, applications: applications || 0, status: status || 'Active' });
   } catch (error) {
     console.error('❌ Update Job Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Delete Job Opportunity
 app.delete('/api/jobs/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -2064,7 +2279,6 @@ app.delete('/api/jobs/:id', verifyToken, async (req, res) => {
 // APPLICANTS ENDPOINTS
 // ======================
 
-// List Applicants
 app.get('/api/applicants', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM applicants ORDER BY created_at DESC, id DESC');
@@ -2075,16 +2289,13 @@ app.get('/api/applicants', async (req, res) => {
   }
 });
 
-// Get Applicant by ID
 app.get('/api/applicants/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT * FROM applicants WHERE id = ?', [id]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Applicant not found.' });
     }
-
     res.json({ ...rows[0], appliedDate: normalizeDate(rows[0].applied_date) });
   } catch (error) {
     console.error('❌ Get Applicant Error:', error);
@@ -2092,72 +2303,41 @@ app.get('/api/applicants/:id', async (req, res) => {
   }
 });
 
-// Add Applicant
 app.post('/api/applicants', verifyToken, async (req, res) => {
   try {
     const { name, email, opportunity, sex, experience, appliedDate, status } = req.body;
-
     if (!name || !opportunity) {
-      return res.status(400).json({
-        error: 'Name and opportunity are required.',
-      });
+      return res.status(400).json({ error: 'Name and opportunity are required.' });
     }
-
     const [result] = await pool.query(
       'INSERT INTO applicants (name, email, opportunity, sex, experience, applied_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [name, email || null, opportunity, sex || null, experience || null, appliedDate || null, status || 'PENDING']
     );
-
-    res.status(201).json({
-      id: result.insertId,
-      name,
-      email: email || null,
-      opportunity,
-      sex: sex || null,
-      experience: experience || null,
-      applied_date: appliedDate || null,
-      status: status || 'PENDING',
-    });
+    res.status(201).json({ id: result.insertId, name, email: email || null, opportunity, sex: sex || null, experience: experience || null, applied_date: appliedDate || null, status: status || 'PENDING' });
   } catch (error) {
     console.error('❌ Add Applicant Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Update Applicant
 app.put('/api/applicants/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, opportunity, sex, experience, appliedDate, status } = req.body;
-
     if (!name || !opportunity) {
-      return res.status(400).json({
-        error: 'Name and opportunity are required.',
-      });
+      return res.status(400).json({ error: 'Name and opportunity are required.' });
     }
-
     await pool.query(
       'UPDATE applicants SET name = ?, email = ?, opportunity = ?, sex = ?, experience = ?, applied_date = ?, status = ? WHERE id = ?',
       [name, email || null, opportunity, sex || null, experience || null, appliedDate || null, status || 'PENDING', id]
     );
-
-    res.json({
-      id: Number(id),
-      name,
-      email: email || null,
-      opportunity,
-      sex: sex || null,
-      experience: experience || null,
-      applied_date: appliedDate || null,
-      status: status || 'PENDING',
-    });
+    res.json({ id: Number(id), name, email: email || null, opportunity, sex: sex || null, experience: experience || null, applied_date: appliedDate || null, status: status || 'PENDING' });
   } catch (error) {
     console.error('❌ Update Applicant Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Delete Applicant
 app.delete('/api/applicants/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -2173,13 +2353,10 @@ app.delete('/api/applicants/:id', verifyToken, async (req, res) => {
 // MESSAGE ENDPOINTS
 // ======================
 
-// List Messages by folder
 app.get('/api/messages', async (req, res) => {
   try {
     const { folder } = req.query;
     let query;
-    let params = [];
-
     if (folder === 'starred') {
       query = "SELECT * FROM messages WHERE is_starred = 1 AND folder != 'trash' ORDER BY sent_date DESC";
     } else if (folder === 'sent') {
@@ -2194,7 +2371,7 @@ app.get('/api/messages', async (req, res) => {
       query = "SELECT * FROM messages WHERE folder = 'inbox' ORDER BY sent_date DESC";
     }
 
-    const [rows] = await pool.query(query, params);
+    const [rows] = await pool.query(query);
     const messages = rows.map((row) => ({
       id: row.id,
       sender: row.sender_name,
@@ -2217,7 +2394,6 @@ app.get('/api/messages', async (req, res) => {
   }
 });
 
-// Sync inbox from IMAP
 app.get('/api/messages/sync', async (req, res) => {
   try {
     if (!IMAP_USER || !IMAP_PASS || IMAP_USER.includes('your-email') || IMAP_PASS.includes('your-app-password')) {
@@ -2289,16 +2465,13 @@ app.get('/api/messages/sync', async (req, res) => {
   }
 });
 
-// Get Message by ID
 app.get('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query('SELECT * FROM messages WHERE id = ?', [id]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Message not found.' });
     }
-
     const row = rows[0];
     res.json({
       id: row.id,
@@ -2324,7 +2497,6 @@ app.get('/api/messages/:id', async (req, res) => {
 app.post('/api/messages', async (req, res) => {
   try {
     const { sender, email, recipient, recipientEmail, subject, body, folder } = req.body;
-
     if (!sender || !email || !subject) {
       return res.status(400).json({ error: 'Sender name, email, and subject are required.' });
     }
@@ -2348,26 +2520,13 @@ app.post('/api/messages', async (req, res) => {
       }
     }
 
-    res.status(201).json({
-      id: result.insertId,
-      sender,
-      email,
-      recipient: recipient || null,
-      recipientEmail: recipientEmail || null,
-      subject,
-      body: body || null,
-      folder: resolvedFolder,
-      read: false,
-      starred: false,
-      label: null,
-    });
+    res.status(201).json({ id: result.insertId, sender, email, recipient: recipient || null, recipientEmail: recipientEmail || null, subject, body: body || null, folder: resolvedFolder, read: false, starred: false, label: null });
   } catch (error) {
     console.error('❌ Send Message Error:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
 
-// Update Message (toggle read, star, move to folder)
 app.put('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -2394,11 +2553,7 @@ app.put('/api/messages/:id', async (req, res) => {
     }
 
     values.push(id);
-    await pool.query(
-      `UPDATE messages SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
-
+    await pool.query(`UPDATE messages SET ${updates.join(', ')} WHERE id = ?`, values);
     res.json({ success: true, id: Number(id) });
   } catch (error) {
     console.error('❌ Update Message Error:', error);
@@ -2406,7 +2561,6 @@ app.put('/api/messages/:id', async (req, res) => {
   }
 });
 
-// Delete Message (hard delete)
 app.delete('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -2418,11 +2572,9 @@ app.delete('/api/messages/:id', async (req, res) => {
   }
 });
 
-// Public contact form endpoint (no auth required)
 app.post('/api/public/contact', async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
-
     if (!name || !email || !subject || !message) {
       return res.status(400).json({ error: 'Name, email, subject, and message are required.' });
     }
@@ -2455,62 +2607,33 @@ app.post('/api/public/contact', async (req, res) => {
 });
 
 // ======================
-// REACT / VITE BUILD
+// PUBLIC JOB APPLICATION
 // ======================
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const distPath = path.join(__dirname, 'dist');
-
-// Serve React Build
-app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
-app.use(express.static(distPath));
-
-// Express 5 Compatible Catch-All Route
-app.get('/{*path}', (req, res, next) => {
-  if (req.path.startsWith('/api/')) return next();
-  res.sendFile(path.join(distPath, 'index.html'));
-});
-
-// ======================
-// START SERVER
-// ======================
-
-app.listen(port, () => {
-  console.log(`
-🚀 Server Running
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🌍 URL: http://localhost:${port}
-📦 Environment: ${process.env.NODE_ENV || 'development'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  `);
-});
-
-app.post('/api/public/job-applications', async (req, res) => {
+app.post('/api/public/job-applications', cvUpload.single('cv'), async (req, res) => {
   try {
-    const { name, email, phone, location, experience, opportunity, opportunityId, cvName, cvData } = req.body;
-    if (!name || !email || !phone || !location || !experience || !opportunity || !cvName || !cvData) return res.status(400).json({ error: 'Please complete every required application field and upload your CV.' });
-    const extension = path.extname(cvName).toLowerCase();
-    if (!['.pdf', '.doc', '.docx'].includes(extension) || !cvData.startsWith('data:')) return res.status(400).json({ error: 'Please upload a PDF, DOC, or DOCX CV.' });
-    const cvBuffer = Buffer.from(cvData.split(',')[1] || '', 'base64');
-    if (!cvBuffer.length || cvBuffer.length > 5 * 1024 * 1024) return res.status(400).json({ error: 'Your CV must be 5 MB or smaller.' });
-    const uploadsDirectory = path.join(__dirname, 'public', 'uploads', 'cvs');
-    await fs.mkdir(uploadsDirectory, { recursive: true });
-    const cvFilename = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${extension}`;
-    const cvPath = path.join(uploadsDirectory, cvFilename);
-    await fs.writeFile(cvPath, cvBuffer);
-    const cvUrl = `/uploads/cvs/${cvFilename}`;
+    const { name, email, phone, location, experience, opportunity, opportunityId } = req.body;
 
-    // Persist the application itself as well as its email notification. This is the
-    // source of truth for the Applicants page in the admin dashboard.
+    if (!name || !opportunity) {
+      return res.status(400).json({ error: 'Name and opportunity are required.' });
+    }
+
+    let cvName = null;
+    let cvUrl = null;
+    if (req.file) {
+      cvName = req.file.originalname;
+      cvUrl = '/uploads/cvs/' + req.file.filename;
+    }
+
+    const appliedDate = new Date().toISOString().split('T')[0];
+
     const connection = await pool.getConnection();
     let applicantId;
     try {
       await connection.beginTransaction();
       const [applicantResult] = await connection.query(
-        'INSERT INTO applicants (name, email, opportunity, experience, phone, location, cv_name, cv_url, applied_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?)',
-        [name, email, opportunity, experience, phone, location, cvName, cvUrl, 'PENDING']
+        'INSERT INTO applicants (name, email, opportunity, experience, phone, location, cv_name, cv_url, applied_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [name, email || null, opportunity, experience || null, phone || null, location || null, cvName, cvUrl, appliedDate, 'PENDING']
       );
       applicantId = applicantResult.insertId;
       if (opportunityId) {
@@ -2526,15 +2649,107 @@ app.post('/api/public/job-applications', async (req, res) => {
 
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@satesoft.com';
     const subject = `Job application: ${opportunity}`;
-    const body = [`Applicant: ${name}`, `Email: ${email}`, `Phone: ${phone}`, `Location: ${location}`, `Experience: ${experience}`, `Opportunity: ${opportunity}${opportunityId ? ` (ID: ${opportunityId})` : ''}`, '', `CV: ${cvName}`, `CV download: ${cvUrl}`].join('\n');
-    await pool.query('INSERT INTO messages (sender_name, sender_email, recipient_name, recipient_email, subject, body, sent_date, folder, is_read, is_starred, label) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, 0, 0, ?)', [name, email, 'Admin User', ADMIN_EMAIL, subject, body, 'inbox', 'Application']);
+    const body = [
+      `Applicant: ${name}`,
+      `Email: ${email}`,
+      `Phone: ${phone}`,
+      `Location: ${location}`,
+      `Experience: ${experience}`,
+      `Opportunity: ${opportunity}${opportunityId ? ` (ID: ${opportunityId})` : ''}`,
+      '',
+      `CV: ${cvName || 'None'}`,
+      `CV download: ${cvUrl || 'N/A'}`,
+    ].join('\n');
+    await pool.query(
+      'INSERT INTO messages (sender_name, sender_email, recipient_name, recipient_email, subject, body, sent_date, folder, is_read, is_starred, label) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, 0, 0, ?)',
+      [name, email || '', 'Admin User', ADMIN_EMAIL, subject, body, 'inbox', 'Application']
+    );
 
     if (SMTP_USER && SMTP_PASS && !SMTP_USER.includes('your-email')) {
-      try { await transporter.sendMail({ from: `"${name}" <${email}>`, to: ADMIN_EMAIL, subject: `[Application] ${subject}`, text: body }); } catch (mailError) { console.error('❌ Job application email error:', mailError.message); }
+      try {
+        await transporter.sendMail({
+          from: `"${name}" <${email || ADMIN_EMAIL}>`,
+          to: ADMIN_EMAIL,
+          subject: `[Application] ${subject}`,
+          text: body,
+        });
+      } catch (mailError) {
+        console.error('❌ Job application email error:', mailError.message);
+      }
     }
-    res.status(201).json({ success: true, applicantId, message: 'Your application has been received.' });
+
+    res.status(201).json({
+      success: true,
+      applicantId,
+      message: 'Your application has been received.',
+      applicant: {
+        id: applicantId,
+        name,
+        email: email || null,
+        opportunity,
+        experience: experience || null,
+        phone: phone || null,
+        location: location || null,
+        cv_name: cvName,
+        cv_url: cvUrl,
+        applied_date: appliedDate,
+        status: 'PENDING',
+      },
+    });
   } catch (error) {
     console.error('❌ Public Job Application Error:', error);
     res.status(500).json({ error: 'Unable to send your application. Please try again.' });
   }
+});
+
+// ======================
+// REACT / VITE BUILD - THIS MUST BE THE LAST SECTION
+// ======================
+
+const distPath = path.join(__dirname, 'dist');
+
+// Serve static files
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+app.use(express.static(distPath));
+
+// 404 handler for API routes - FIXED: No wildcard in path
+app.use((req, res, next) => {
+  // If it's an API route and hasn't been handled, return 404
+  if (req.path.startsWith('/api/')) {
+    console.log(`❌ API route not found: ${req.method} ${req.originalUrl}`);
+    return res.status(404).json({
+      error: 'API endpoint not found',
+      path: req.originalUrl,
+      method: req.method
+    });
+  }
+  // Otherwise, continue to the next middleware
+  next();
+});
+
+// Catch-all route for React SPA - MUST BE THE VERY LAST ROUTE
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  res.sendFile(path.join(distPath, 'index.html'), (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).send('Error loading application');
+    }
+  });
+});
+
+// ======================
+// START SERVER
+// ======================
+
+app.listen(port, () => {
+  console.log(`
+🚀 Server Running
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌍 URL: http://localhost:${port}
+📦 Environment: ${process.env.NODE_ENV || 'development'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  `);
 });

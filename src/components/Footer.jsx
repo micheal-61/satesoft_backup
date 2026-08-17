@@ -251,7 +251,26 @@ function Footer() {
               <p className="mb-4 text-[#72bf24] text-[14px]">
                 Subscribe to get the latest news, updates, and product insights from Satesoft.
               </p>
-              <form action="#" method="post" className="relative">
+               <form onSubmit={async (e) => {
+                 e.preventDefault();
+                 const form = e.target;
+                 const email = form.EMAIL?.value?.trim();
+                 if (!email) return;
+                 try {
+                   const res = await fetch('/api/subscribe', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ email })
+                   });
+                   const data = await res.json().catch(() => ({}));
+                   form.reset();
+                   alert(data.message || 'Subscribed successfully!');
+                   localStorage.setItem('satesoft_dashboard_refresh', String(Date.now()));
+                 } catch (err) {
+                   console.error('Subscribe error:', err);
+                   alert('Subscription failed. Please try again.');
+                 }
+               }} className="relative">
                 <input 
                   type="email" 
                   name="EMAIL" 

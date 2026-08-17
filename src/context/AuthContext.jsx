@@ -4,7 +4,10 @@ import axios from 'axios';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('cms_auth_user');
+    return stored ? JSON.parse(stored) : null;
+  });
   const [token, setToken] = useState(localStorage.getItem('cms_auth_token') || null);
   const [loading, setLoading] = useState(true);
 
@@ -22,10 +25,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post('/api/auth/login', { username, password });
       const { token: newToken, user: loggedInUser } = response.data;
+      const userData = { authenticated: true, ...loggedInUser };
 
       localStorage.setItem('cms_auth_token', newToken);
+      localStorage.setItem('cms_auth_user', JSON.stringify(userData));
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      setUser({ authenticated: true, ...loggedInUser });
+      setUser(userData);
       setToken(newToken);
       return { success: true };
     } catch (error) {
@@ -39,6 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('cms_auth_token');
+    localStorage.removeItem('cms_auth_user');
     setToken(null);
   };
 

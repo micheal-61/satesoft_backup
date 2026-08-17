@@ -27,7 +27,17 @@ const Pricing = () => {
     if (!features) return [];
     if (Array.isArray(features)) return features;
     try {
-      return JSON.parse(features);
+      const parsed = JSON.parse(features);
+      if (Array.isArray(parsed)) return parsed;
+      if (typeof parsed === 'string') {
+        try {
+          const doubleParsed = JSON.parse(parsed);
+          if (Array.isArray(doubleParsed)) return doubleParsed;
+        } catch {
+          return parsed.split('\n').map(f => f.trim()).filter(f => f);
+        }
+      }
+      return [];
     } catch {
       return features.split('\n').map(f => f.trim()).filter(f => f);
     }

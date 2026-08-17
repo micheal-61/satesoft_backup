@@ -25,12 +25,12 @@ const PrivacyPolicy = () => {
   const renderMarkdown = (text) => {
     if (!text) return '';
     let html = text
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-text mt-4 mb-2">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-text mt-4 mb-2">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-text mt-4 mb-2">$1</h1>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/^\s*-\s(.*$)/gim, '<li class="ml-4 list-disc mb-1">$1</li>')
+      .replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold text-text mt-6 mb-3">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-semibold text-text mt-8 mb-4">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-3xl md:text-4xl font-semibold text-text mt-10 mb-5">$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-text">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="text-text/80">$1</em>')
+      .replace(/^\s*-\s(.*$)/gim, '<li class="ml-6 list-disc mb-2 text-text/80 font-light">$1</li>')
       .replace(/\n/g, '<br />');
     return html;
   };
@@ -64,19 +64,19 @@ const PrivacyPolicy = () => {
       <div className="container mx-auto px-8 sm:px-12 lg:px-20 py-20">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 border border-primary-200 rounded-full text-primary-700 text-sm font-semibold mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 border border-primary-200 rounded-full text-primary-700 text-sm font-medium mb-6">
               <i className="bi bi-shield-check-fill"></i>
               Privacy Policy
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-text mb-4">Privacy Policy</h1>
-            <p className="text-lg text-text/70">Last updated: {new Date().toLocaleDateString()}</p>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-text mb-4 leading-tight">Privacy Policy</h1>
+            <p className="text-lg text-text/70 font-light">Last updated: {new Date().toLocaleDateString()}</p>
           </div>
 
           {policies.length > 0 ? (
             <div className="space-y-8">
               {policies.map((policy, index) => (
                 <div key={policy.id} className="bg-white rounded-3xl p-8 md:p-10 border border-slate-200 shadow-sm">
-                  <h2 className="text-2xl font-bold text-text mb-4">{policy.title}</h2>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-text mb-4">{policy.title}</h2>
                   <div 
                     className="text-base text-text/70 leading-relaxed prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(policy.content) }}

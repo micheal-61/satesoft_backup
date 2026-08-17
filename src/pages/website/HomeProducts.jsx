@@ -5,6 +5,17 @@ import { Link } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
 
+const safeImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (/^file:\/\//i.test(trimmed)) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith('/')) return trimmed;
+  if (trimmed.startsWith('data:')) return trimmed;
+  return '/' + trimmed;
+};
+
 const HomeProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +139,7 @@ const HomeProducts = () => {
                     <div className="absolute inset-4 bg-white/40 backdrop-blur-md rounded-[2rem] rotate-2 -z-10"></div>
                     <div className="absolute inset-4 bg-primary-50/60 backdrop-blur-md rounded-[2rem] -rotate-1 -z-10"></div>
                     <img
-                      src={product.logoUrl || product.logo_url || "https://via.placeholder.com/600x400"}
+                      src={safeImageUrl(product.logoUrl || product.logo_url) || "https://via.placeholder.com/600x400"}
                       alt={product.name}
                       className="w-full rounded-[2rem] shadow-2xl object-cover aspect-[4/3]"
                     />

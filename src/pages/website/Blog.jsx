@@ -5,6 +5,17 @@ import {
   FaRocket, FaHandshake, FaCode, FaArrowRight
 } from "react-icons/fa";
 
+const resolveImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (/^file:\/\//i.test(trimmed)) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith('/')) return trimmed;
+  if (trimmed.startsWith('data:')) return trimmed;
+  return '/' + trimmed;
+};
+
 const Blog = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +44,42 @@ const Blog = () => {
       }
     };
     fetchNews();
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      fetch('/api/news')
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(setArticles)
+        .catch(() => {});
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === 'satesoft_comments_cleared') {
+        refresh();
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refresh();
+      }
+    };
+
+    const handleFocus = () => {
+      refresh();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handleVisibility);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handleVisibility);
+    };
   }, []);
 
   const categories = useMemo(() => {
@@ -168,13 +215,13 @@ const Blog = () => {
                   key={article.id || article.title}
                   className="group relative block overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
                 >
-                  {/* Image */}
-                  <div className="relative h-56 overflow-hidden bg-gray-100">
-                    <img
-                      src={article.image_url || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500"}
-                      alt={article.title}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
+                   {/* Image */}
+                   <div className="relative h-56 overflow-hidden bg-gray-100">
+                     <img
+                       src={resolveImageUrl(article.imageUrl) || "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500"}
+                       alt={article.title}
+                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 via-gray-900/10 to-transparent" />
                     
                     {/* Category Badge */}
@@ -213,25 +260,28 @@ const Blog = () => {
                          {article.author || "Satesoft Team"}
                        </span>
                        
-                       <Link 
-                         to={`/blog/${article.slug || generateSlug(article.title)}`}
-                         className="flex items-center gap-1.5 hover:text-[#72bf24] transition-colors"
-                       >
-                         <FaComments className="text-[#72bf24]" />
-                         <span>{article.comments || 0}</span>
-                       </Link>
-                       
-                       <span className="flex items-center gap-1.5">
-                         <FaEye className="text-[#72bf24]" />
-                         {article.views || 0}
-                       </span>
+                        <Link 
+                          to={`/blog/${article.id}`}
+                          className="flex items-center gap-1.5 hover:text-[#72bf24] transition-colors"
+                        >
+                          <FaComments className="text-[#72bf24]" />
+                          <span>{article.comments || 0}</span>
+                        </Link>
+                        
+                        <Link 
+                          to={`/blog/${article.id}`}
+                          className="flex items-center gap-1.5 hover:text-[#72bf24] transition-colors"
+                        >
+                          <FaEye className="text-[#72bf24]" />
+                          {article.views || 0}
+                        </Link>
                      </div>
                   </div>
 
                   {/* Read more button */}
                   <div className="p-5 pt-0">
                     <Link 
-                      to={`/blog/${article.slug || generateSlug(article.title)}`}
+                      to={`/blog/${article.id}`}
                       className="inline-flex items-center text-sm font-semibold text-[#72bf24] group-hover:text-[#62a71e] transition-colors"
                     >
                       Read full article 
@@ -254,7 +304,7 @@ const Blog = () => {
       </div>
 
       {/* CSS */}
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

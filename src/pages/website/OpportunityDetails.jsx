@@ -48,10 +48,11 @@ const OpportunityDetails = () => {
         </Link>
 
         <article className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl">
-          <header className="bg-gradient-to-br from-[#72bf24] to-[#5c9f1b] px-8 py-12 text-white md:px-12">
-            <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider">{job.type || 'Opportunity'}</span>
-            <h1 className="mt-5 max-w-3xl text-3xl font-semibold leading-tight md:text-5xl">{job.title}</h1>
-            <div className="mt-6 flex flex-wrap gap-5 text-sm text-white/90">
+          <header className="bg-[#F5F5F5] px-8 py-12 text-gray-900 md:px-12">
+            <div className="mb-5 h-1 w-16 rounded-full bg-[#72bf24]"></div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Opportunity</p>
+            <h1 className="mt-2 max-w-3xl text-3xl font-medium leading-tight md:text-5xl">{job.title}</h1>
+            <div className="mt-6 flex flex-wrap gap-5 text-sm text-gray-600">
               {job.location && <span><i className="bi bi-geo-alt mr-2"></i>{job.location}</span>}
               <span><i className="bi bi-people mr-2"></i>{job.applications !== undefined ? `${job.applications} positions available` : 'Open position'}</span>
             </div>
@@ -60,12 +61,12 @@ const OpportunityDetails = () => {
           <div className="grid gap-10 p-8 md:grid-cols-[1fr_280px] md:p-12">
             <div className="space-y-9">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">About this opportunity</h2>
+                <h2 className="text-2xl font-medium text-gray-900">About this opportunity</h2>
                 <p className="mt-4 whitespace-pre-line leading-relaxed text-gray-600">{job.description || 'More details about this opportunity will be shared with shortlisted candidates.'}</p>
               </div>
               {requirements.length > 0 && (
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">Key requirements</h2>
+                  <h2 className="text-2xl font-medium text-gray-900">Key requirements</h2>
                   <ul className="mt-4 space-y-3">
                     {requirements.map((requirement, index) => <li key={index} className="flex gap-3 text-gray-600"><i className="bi bi-check-circle-fill mt-1 text-[#72bf24]"></i><span>{requirement}</span></li>)}
                   </ul>

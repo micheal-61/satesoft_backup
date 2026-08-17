@@ -2,6 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, CheckLg, ArrowRight, Envelope } from "react-bootstrap-icons";
 
+const safeImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (/^file:\/\//i.test(trimmed)) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith('/')) return trimmed;
+  if (trimmed.startsWith('data:')) return trimmed;
+  return '/' + trimmed;
+};
+
 const ServiceDetails = () => {
   const { id } = useParams();
   const [service, setService] = useState(null);
@@ -164,7 +175,7 @@ const ServiceDetails = () => {
         {service.imageUrl && (
           <div className="mt-16 rounded-3xl overflow-hidden shadow-xl border border-border">
             <img
-              src={service.imageUrl}
+              src={safeImageUrl(service.imageUrl)}
               alt={service.title}
               className="w-full h-[400px] object-cover"
               loading="lazy"

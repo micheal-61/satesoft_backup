@@ -6,14 +6,6 @@ import {
 } from "react-icons/fa";
 import axios from 'axios';
 
-const generateSlug = (title) => {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .substring(0, 50);
-};
-
 const getStoredUsername = () => {
   let username = localStorage.getItem('satesoft_blog_username');
   if (!username) {
@@ -34,7 +26,7 @@ const BlogDetails = () => {
   const [error, setError] = useState("");
   const [scrollProgress, setScrollProgress] = useState(0);
   const [copied, setCopied] = useState(false);
-  const { slug } = useParams();
+  const { id } = useParams();
 
   const [comments, setComments] = useState([]);
   const [commentLoading, setCommentLoading] = useState(false);
@@ -42,31 +34,33 @@ const BlogDetails = () => {
   const [commentSuccess, setCommentSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [newCommentContent, setNewCommentContent] = useState('');
-  const [commentAuthor, setCommentAuthor] = useState(() => getStoredUsername());
+  const [commentAuthor, setCommentAuthor] = useState('');
 
   const username = commentAuthor || 'Guest';
 
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const response = await fetch('/api/news');
-        if (!response.ok) throw new Error('Failed to fetch news');
+        const response = await fetch(`/api/news/${id}`);
+        if (!response.ok) {
+          const text = await response.text();
+          let errorMsg = `HTTP ${response.status}`;
+          try {
+            const err = JSON.parse(text);
+            errorMsg = err.error || errorMsg;
+          } catch {
+            errorMsg = text || errorMsg;
+          }
+          throw new Error(errorMsg);
+        }
         const data = await response.json();
 
-        const matchedArticle = data.find(item => generateSlug(item.title) === slug);
-
-        if (matchedArticle) {
-          setArticle({
-            ...matchedArticle,
-            publishDate: matchedArticle.date,
-            imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500",
-            readTime: "5 min read",
-            comments: 0,
-            views: 0,
-          });
-        } else {
-          setError("Article not found.");
-        }
+        setArticle({
+          ...data,
+          publishDate: data.date,
+          imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800&h=500",
+          readTime: "5 min read",
+        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -74,8 +68,18 @@ const BlogDetails = () => {
       }
     };
 
-    fetchArticle();
-  }, [slug]);
+    if (id) {
+      fetchArticle();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (article?.id) {
+      fetch('/api/news/' + article.id + '/view', { method: 'POST' }).then(() => {
+        localStorage.setItem('satesoft_dashboard_refresh', String(Date.now()));
+      }).catch(() => {});
+    }
+  }, [article?.id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,11 +94,62 @@ const BlogDetails = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const fetchComments = useCallback(async (articleId) => {
+    setCommentLoading(true);
+    setCommentError('');
+    try {
+      const response = await axios.get(`/api/articles/${articleId}/comments`);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setComments(data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      setCommentError('Failed to load comments. Please try again.');
+      setComments([]);
+    } finally {
+      setCommentLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (article?.id) {
       fetchComments(article.id);
     }
-  }, [article?.id]);
+  }, [article?.id, fetchComments]);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (article?.id) {
+        fetchComments(article.id);
+      }
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === 'satesoft_comments_cleared') {
+        refresh();
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refresh();
+      }
+    };
+
+    const handleFocus = () => {
+      refresh();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handleVisibility);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handleVisibility);
+    };
+  }, [article?.id, fetchComments]);
 
   const handleShare = async () => {
     try {
@@ -111,22 +166,6 @@ const BlogDetails = () => {
     const words = paragraphs.join(" ").trim().split(/\s+/).filter(Boolean).length;
     return Math.max(2, Math.ceil(words / 180));
   }, [paragraphs]);
-
-  const fetchComments = useCallback(async (articleId) => {
-    setCommentLoading(true);
-    setCommentError('');
-    try {
-      const response = await axios.get(`/api/comments/${articleId}`);
-      const data = Array.isArray(response.data) ? response.data : [];
-      setComments(data);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-      setCommentError('Failed to load comments. Please try again.');
-      setComments([]);
-    } finally {
-      setCommentLoading(false);
-    }
-  }, []);
 
   const handleSubmitComment = async (e) => {
     e.preventDefault();
@@ -152,6 +191,7 @@ const BlogDetails = () => {
         setCommentSuccess(true);
         setNewCommentContent('');
         setComments((current) => [{ ...response.data, _id: response.data.id, replies: [] }, ...current]);
+        localStorage.setItem('satesoft_dashboard_refresh', String(Date.now()));
         setTimeout(() => setCommentSuccess(false), 3000);
       }
     } catch (error) {
@@ -341,7 +381,7 @@ const BlogDetails = () => {
                     value={commentAuthor}
                     onChange={(e) => setCommentAuthor(e.target.value)}
                     maxLength="80"
-                    placeholder="Your name"
+                    placeholder="Type your name here..."
                     className="mb-4 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#72bf24]"
                     required
                   />

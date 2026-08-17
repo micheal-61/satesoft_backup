@@ -24,6 +24,7 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.28.0",
     "mailparser": "^3.9.14",
+    "multer": "^2.2.0",
     "mysql2": "^3.23.2",
     "nodemailer": "^9.0.4",
     "react": "^19.2.6",
